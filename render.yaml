@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: earnstack-api
+    runtime: dotnet
+    plan: free
+    buildCommand: dotnet publish backend/eTracker.API/eTracker.API.csproj -c Release -o out
+    startCommand: dotnet out/eTracker.API.dll --urls http://0.0.0.0:$PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: JwtSettings__Issuer
+        value: Earnstrack
+      - key: JwtSettings__Audience
+        value: Earnstrack-users
+      - key: Cors__AllowedOrigins__0
+        value: https://maynardrt.github.io
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: JwtSettings__SecretKey
+        sync: false

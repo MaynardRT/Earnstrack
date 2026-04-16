@@ -126,3 +126,5 @@ That will create a GitHub Release containing:
 2. The backend is still delivered as a deployable artifact because the repository does not yet define a concrete production host for the API.
 3. If you want fully automated backend deployment to Azure, Render, Railway, IIS, or another target, the next step is to add a deployment-specific workflow and the required secrets.
 4. If you rename the GitHub repository again, the Pages URL and base path will change with the repository name.
+
+For a concrete free-hosting setup using GitHub Pages plus Render, see `documentation/FREE_DEPLOYMENT.md`.
