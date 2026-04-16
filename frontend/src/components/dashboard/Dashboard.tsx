@@ -123,7 +123,7 @@ export const Dashboard: React.FC = () => {
                     Status
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Date
+                    Date & Time
                   </th>
                 </tr>
               </thead>
@@ -182,7 +182,23 @@ export const Dashboard: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-400 text-sm">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
+                        <div className="flex flex-col leading-tight">
+                          <span>
+                            {new Date(
+                              transaction.createdAt,
+                            ).toLocaleDateString()}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-500">
+                            {new Date(transaction.createdAt).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              },
+                            )}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   ))

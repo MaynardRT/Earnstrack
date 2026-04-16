@@ -2,7 +2,7 @@
 
 ## Overview
 
-eTracker has been simplified to use **database-only, password-based authentication**. Google OAuth has been completely removed to streamline the authentication process for your 2-user production deployment.
+Earnstrack has been simplified to use **database-only, password-based authentication**. Google OAuth has been completely removed to streamline the authentication process for your 2-user production deployment.
 
 ## Quick Start - Test Credentials
 

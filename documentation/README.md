@@ -1,4 +1,4 @@
-# eTracker - Full Stack Application
+# Earnstrack - Full Stack Application
 
 > A comprehensive business earnings management application built with ASP.NET Core and React.
 

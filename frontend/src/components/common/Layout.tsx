@@ -3,6 +3,7 @@ import { Sun, Moon, Menu } from "lucide-react";
 import { useAuthStore } from "../../context/authStore";
 import { useThemeStore } from "../../context/themeStore";
 import { UserAvatar } from "./UserAvatar";
+import { BrandLogo } from "./BrandLogo";
 
 interface LayoutProps {
   children: ReactNode;
@@ -35,9 +36,12 @@ export const Layout: React.FC<LayoutProps> = ({
                     <Menu size={24} className="text-gray-900 dark:text-white" />
                   </button>
                 )}
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  eTracker
-                </h1>
+                <div className="flex items-center gap-3">
+                  <BrandLogo variant="mark" className="h-9 w-9 rounded-xl" />
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Earnstrack
+                  </h1>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <UserAvatar

@@ -1,4 +1,4 @@
-# Quick Reference Guide
+# Earnstrack Quick Reference Guide
 
 ## 🚀 Start Development in 3 Steps
 

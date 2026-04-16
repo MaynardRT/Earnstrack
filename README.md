@@ -1,4 +1,4 @@
-# eTracker - Complete E-Commerce Transaction Tracker
+# Earnstrack - Complete E-Commerce Transaction Tracker
 
 A full-stack application for managing e-wallet and printing service transactions with comprehensive role-based access control and reporting.
 

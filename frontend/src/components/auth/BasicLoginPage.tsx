@@ -5,6 +5,7 @@ import { authService } from "../../services/authService";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Alert } from "../common/Alert";
+import { BrandLogo } from "../common/BrandLogo";
 
 export const BasicLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,11 +51,12 @@ export const BasicLoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            eTracker
+          <BrandLogo className="mx-auto mb-4 h-20 w-auto" />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Earnstrack
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your business earnings
+            Track and manage your business earnings
           </p>
         </div>
 

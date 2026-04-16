@@ -1,4 +1,4 @@
-# eTracker - Complete Architecture Overview
+# Earnstrack - Complete Architecture Overview
 
 ## Project Completed Successfully ✅
 
@@ -315,7 +315,7 @@ All with proper relationships, indexes, and constraints.
 
 ---
 
-**Your eTracker application is ready for development! 🎉**
+**Your Earnstrack application is ready for development! 🎉**
 
 Start by following the AUTHENTICATION_SETUP.md guide to configure users and database, then refer to DEVELOPMENT.md for local setup.
 
