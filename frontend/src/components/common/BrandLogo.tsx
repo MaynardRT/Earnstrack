@@ -10,7 +10,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   className = "",
 }) => {
   const fileName =
-    variant === "mark" ? "earnstrack-mark.svg" : "earnstrack-logo.svg";
+    variant === "mark" ? "earnstrack-mark.svg" : "earnstrack-mark.svg";
 
   return (
     <img
