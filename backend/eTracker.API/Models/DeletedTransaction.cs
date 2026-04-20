@@ -19,6 +19,8 @@ public class DeletedTransaction
     public string? AmountBracket { get; set; }
     public string? ReferenceNumber { get; set; }
     public string? ScreenshotUrl { get; set; }
+    public byte[]? ScreenshotContent { get; set; }
+    public string? ScreenshotContentType { get; set; }
     public decimal? EWalletBaseAmount { get; set; }
     public string? PrintingServiceType { get; set; }
     public string? PaperSize { get; set; }

@@ -163,6 +163,11 @@ public class TransactionServiceTests
 
         Assert.NotNull(result);
         Assert.Equal("/uploads/receipts/test-image.png", result!.ScreenshotUrl);
+        Assert.Equal("data:image/png;base64,dGVzdA==", result.ScreenshotDataUrl);
+
+        var storedReceipt = await context.EWalletTransactions.SingleAsync();
+        Assert.Equal("image/png", storedReceipt.ScreenshotContentType);
+        Assert.Equal(new byte[] { 116, 101, 115, 116 }, storedReceipt.ScreenshotContent);
     }
 
     [Fact]
@@ -280,14 +285,19 @@ public class TransactionServiceTests
 
     private sealed class StubReceiptStorageService : IReceiptStorageService
     {
-        public Task<string?> SaveReceiptAsync(string? screenshotBase64, CancellationToken cancellationToken = default)
+        public Task<ReceiptStorageResult?> SaveReceiptAsync(string? screenshotBase64, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(screenshotBase64))
             {
-                return Task.FromResult<string?>(null);
+                return Task.FromResult<ReceiptStorageResult?>(null);
             }
 
-            return Task.FromResult<string?>("/uploads/receipts/test-image.png");
+            return Task.FromResult<ReceiptStorageResult?>(new ReceiptStorageResult
+            {
+                RelativeUrl = "/uploads/receipts/test-image.png",
+                Content = new byte[] { 116, 101, 115, 116 },
+                ContentType = "image/png"
+            });
         }
     }
 }

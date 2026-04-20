@@ -153,15 +153,19 @@ public class SettingsController : ControllerBase
             .ToListAsync();
 
         var csv = new System.Text.StringBuilder();
-        csv.AppendLine("Date,Time,Type,Amount,Service Charge,Total,Status,Failure Reason,Screenshot Reference");
+        csv.AppendLine("Date,Time,Type,Amount,Service Charge,Total,Status,Failure Reason,Screenshot Reference,Screenshot Stored In Database");
 
         foreach (var transaction in transactions)
         {
             var failureReason = EscapeCsvField(transaction.FailureReason);
-            var screenshotReference = EscapeCsvField(transaction.EWalletTransaction?.ScreenshotUrl);
+            var screenshotReference = EscapeCsvField(BuildScreenshotReference(
+                transaction.EWalletTransaction?.ScreenshotUrl,
+                transaction.EWalletTransaction?.ScreenshotContent,
+                transaction.EWalletTransaction?.ScreenshotContentType));
+            var screenshotStoredInDatabase = transaction.EWalletTransaction?.ScreenshotContent?.Length > 0 ? "Yes" : "No";
 
             csv.AppendLine(
-                $"{transaction.CreatedAt:yyyy-MM-dd},{transaction.CreatedAt:HH:mm:ss},{EscapeCsvField(transaction.TransactionType)},{transaction.Amount},{transaction.ServiceCharge},{transaction.TotalAmount},{EscapeCsvField(transaction.Status)},{failureReason},{screenshotReference}");
+                $"{transaction.CreatedAt:yyyy-MM-dd},{transaction.CreatedAt:HH:mm:ss},{EscapeCsvField(transaction.TransactionType)},{transaction.Amount},{transaction.ServiceCharge},{transaction.TotalAmount},{EscapeCsvField(transaction.Status)},{failureReason},{screenshotReference},{screenshotStoredInDatabase}");
         }
 
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
@@ -180,5 +184,20 @@ public class SettingsController : ControllerBase
             .Replace("\n", " ");
 
         return $"\"{normalized.Replace("\"", "\"\"")}\"";
+    }
+
+    private string? BuildScreenshotReference(string? screenshotUrl, byte[]? screenshotContent, string? screenshotContentType)
+    {
+        if (!string.IsNullOrWhiteSpace(screenshotUrl))
+        {
+            if (Uri.TryCreate(screenshotUrl, UriKind.Absolute, out var absoluteUri))
+            {
+                return absoluteUri.ToString();
+            }
+
+            return $"{Request.Scheme}://{Request.Host}{screenshotUrl}";
+        }
+
+        return ReceiptContentHelper.ToDataUrl(screenshotContent, screenshotContentType);
     }
 }

@@ -9,6 +9,8 @@ public class EWalletTransaction
     public string? AmountBracket { get; set; }
     public string ReferenceNumber { get; set; } = string.Empty;
     public string? ScreenshotUrl { get; set; }
+    public byte[]? ScreenshotContent { get; set; }
+    public string? ScreenshotContentType { get; set; }
     public decimal BaseAmount { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -95,6 +95,7 @@ public class TransactionListDto
     public string? AmountBracket { get; set; }
     public string? ReferenceNumber { get; set; }
     public string? ScreenshotUrl { get; set; }
+    public string? ScreenshotDataUrl { get; set; }
     public string? PrintingServiceType { get; set; }
     public string? PaperSize { get; set; }
     public string? Color { get; set; }

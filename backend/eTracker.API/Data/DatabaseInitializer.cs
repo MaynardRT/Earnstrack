@@ -34,6 +34,7 @@ public static class DatabaseInitializer
         logger.LogInformation("Applying database migrations.");
         await EnsureMigrationHistoryForExistingSchemaAsync(dbContext, logger);
         await dbContext.Database.MigrateAsync();
+        await EnsureReceiptStorageColumnsAsync(dbContext, logger);
 
         await SeedAdminUserAsync(scope.ServiceProvider, configuration, dbContext, logger);
     }
@@ -190,6 +191,8 @@ public static class DatabaseInitializer
                 "AmountBracket" character varying(100),
                 "ReferenceNumber" character varying(200),
                 "ScreenshotUrl" character varying(500),
+                "ScreenshotContent" bytea,
+                "ScreenshotContentType" character varying(100),
                 "EWalletBaseAmount" numeric(10,2),
                 "PrintingServiceType" character varying(100),
                 "PaperSize" character varying(50),
@@ -211,6 +214,42 @@ public static class DatabaseInitializer
             command.CommandText = sql;
             await command.ExecuteNonQueryAsync();
         }
+    }
+
+    private static async Task EnsureReceiptStorageColumnsAsync(ApplicationDbContext dbContext, ILogger logger)
+    {
+        var commands = new[]
+        {
+            "ALTER TABLE IF EXISTS \"EWalletTransactions\" ADD COLUMN IF NOT EXISTS \"ScreenshotContent\" bytea",
+            "ALTER TABLE IF EXISTS \"EWalletTransactions\" ADD COLUMN IF NOT EXISTS \"ScreenshotContentType\" character varying(100)",
+            "ALTER TABLE IF EXISTS \"DeletedTransactions\" ADD COLUMN IF NOT EXISTS \"ScreenshotContent\" bytea",
+            "ALTER TABLE IF EXISTS \"DeletedTransactions\" ADD COLUMN IF NOT EXISTS \"ScreenshotContentType\" character varying(100)"
+        };
+
+        var shouldCloseConnection = dbContext.Database.GetDbConnection().State != ConnectionState.Open;
+        if (shouldCloseConnection)
+        {
+            await dbContext.Database.OpenConnectionAsync();
+        }
+
+        try
+        {
+            foreach (var sql in commands)
+            {
+                using var command = dbContext.Database.GetDbConnection().CreateCommand();
+                command.CommandText = sql;
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+        finally
+        {
+            if (shouldCloseConnection)
+            {
+                await dbContext.Database.CloseConnectionAsync();
+            }
+        }
+
+        logger.LogInformation("Ensured receipt storage columns exist for active and archived e-wallet transactions.");
     }
 
     private static string GetEfProductVersion()

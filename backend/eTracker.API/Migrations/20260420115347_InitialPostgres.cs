@@ -32,6 +32,8 @@ namespace eTracker.API.Migrations
                     AmountBracket = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     ReferenceNumber = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     ScreenshotUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    ScreenshotContent = table.Column<byte[]>(type: "bytea", nullable: true),
+                    ScreenshotContentType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     EWalletBaseAmount = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     PrintingServiceType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     PaperSize = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
@@ -144,6 +146,8 @@ namespace eTracker.API.Migrations
                     AmountBracket = table.Column<string>(type: "text", nullable: true),
                     ReferenceNumber = table.Column<string>(type: "text", nullable: false),
                     ScreenshotUrl = table.Column<string>(type: "text", nullable: true),
+                    ScreenshotContent = table.Column<byte[]>(type: "bytea", nullable: true),
+                    ScreenshotContentType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     BaseAmount = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },

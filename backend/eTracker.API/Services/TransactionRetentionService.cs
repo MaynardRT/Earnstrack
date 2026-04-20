@@ -105,6 +105,8 @@ public class TransactionRetentionService : ITransactionRetentionService
             AmountBracket = transaction.EWalletTransaction?.AmountBracket,
             ReferenceNumber = transaction.EWalletTransaction?.ReferenceNumber,
             ScreenshotUrl = transaction.EWalletTransaction?.ScreenshotUrl,
+            ScreenshotContent = transaction.EWalletTransaction?.ScreenshotContent,
+            ScreenshotContentType = transaction.EWalletTransaction?.ScreenshotContentType,
             EWalletBaseAmount = transaction.EWalletTransaction?.BaseAmount,
             PrintingServiceType = transaction.PrintingTransaction?.ServiceType,
             PaperSize = transaction.PrintingTransaction?.PaperSize,

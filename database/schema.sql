@@ -54,6 +54,8 @@ CREATE TABLE IF NOT EXISTS "EWalletTransactions" (
     "AmountBracket" varchar(100),
     "ReferenceNumber" varchar(200) NOT NULL,
     "ScreenshotUrl" varchar(500),
+    "ScreenshotContent" bytea,
+    "ScreenshotContentType" varchar(100),
     "BaseAmount" numeric(10, 2) NOT NULL,
     "CreatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
@@ -87,6 +89,8 @@ CREATE TABLE IF NOT EXISTS "DeletedTransactions" (
     "AmountBracket" varchar(100),
     "ReferenceNumber" varchar(200),
     "ScreenshotUrl" varchar(500),
+    "ScreenshotContent" bytea,
+    "ScreenshotContentType" varchar(100),
     "EWalletBaseAmount" numeric(10, 2),
     "PrintingServiceType" varchar(100),
     "PaperSize" varchar(50),

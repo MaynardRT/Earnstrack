@@ -98,6 +98,10 @@ public class ApplicationDbContext : DbContext
             .HasMaxLength(500);
 
         modelBuilder.Entity<DeletedTransaction>()
+            .Property(t => t.ScreenshotContentType)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<DeletedTransaction>()
             .Property(t => t.PrintingServiceType)
             .HasMaxLength(100);
 
@@ -128,6 +132,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<EWalletTransaction>()
             .Property(e => e.BaseAmount)
             .HasPrecision(10, 2);
+
+        modelBuilder.Entity<EWalletTransaction>()
+            .Property(e => e.ScreenshotContentType)
+            .HasMaxLength(100);
 
         modelBuilder.Entity<PrintingTransaction>()
             .Property(p => p.BaseAmount)

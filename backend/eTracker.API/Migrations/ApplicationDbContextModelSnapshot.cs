@@ -125,6 +125,13 @@ namespace eTracker.API.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<byte[]>("ScreenshotContent")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("ScreenshotContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<decimal?>("ServiceCharge")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
@@ -188,6 +195,13 @@ namespace eTracker.API.Migrations
 
                     b.Property<string>("ScreenshotUrl")
                         .HasColumnType("text");
+
+                    b.Property<byte[]>("ScreenshotContent")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("ScreenshotContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("TransactionId")
                         .HasColumnType("uuid");

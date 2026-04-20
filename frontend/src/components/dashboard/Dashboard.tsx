@@ -22,6 +22,8 @@ export const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+  const [useEmbeddedScreenshotFallback, setUseEmbeddedScreenshotFallback] =
+    useState(false);
 
   useEffect(() => {
     loadData();
@@ -56,9 +58,10 @@ export const Dashboard: React.FC = () => {
       </div>
     );
 
-  const screenshotPreviewUrl = resolveApiAssetUrl(
-    selectedTransaction?.screenshotUrl,
-  );
+  const screenshotPreviewUrl = useEmbeddedScreenshotFallback
+    ? selectedTransaction?.screenshotDataUrl || null
+    : resolveApiAssetUrl(selectedTransaction?.screenshotUrl);
+  const screenshotFallbackUrl = selectedTransaction?.screenshotDataUrl || null;
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
@@ -250,7 +253,10 @@ export const Dashboard: React.FC = () => {
                       <td className="py-3 px-4">
                         <button
                           type="button"
-                          onClick={() => setSelectedTransaction(transaction)}
+                          onClick={() => {
+                            setUseEmbeddedScreenshotFallback(false);
+                            setSelectedTransaction(transaction);
+                          }}
                           className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-500/10"
                         >
                           <Eye size={16} />
@@ -288,7 +294,10 @@ export const Dashboard: React.FC = () => {
       <Modal
         title="Transaction Details"
         isOpen={selectedTransaction !== null}
-        onClose={() => setSelectedTransaction(null)}
+        onClose={() => {
+          setUseEmbeddedScreenshotFallback(false);
+          setSelectedTransaction(null);
+        }}
       >
         {selectedTransaction && (
           <div className="space-y-6">
@@ -358,6 +367,14 @@ export const Dashboard: React.FC = () => {
                         src={screenshotPreviewUrl}
                         alt="Transaction screenshot reference"
                         className="max-h-[28rem] w-full rounded-xl border border-gray-200 object-contain dark:border-gray-700"
+                        onError={() => {
+                          if (
+                            screenshotFallbackUrl &&
+                            !useEmbeddedScreenshotFallback
+                          ) {
+                            setUseEmbeddedScreenshotFallback(true);
+                          }
+                        }}
                       />
                       <a
                         href={screenshotPreviewUrl}

@@ -5,7 +5,27 @@ namespace eTracker.API.Services;
 
 public interface IReceiptStorageService
 {
-    Task<string?> SaveReceiptAsync(string? screenshotBase64, CancellationToken cancellationToken = default);
+    Task<ReceiptStorageResult?> SaveReceiptAsync(string? screenshotBase64, CancellationToken cancellationToken = default);
+}
+
+public sealed class ReceiptStorageResult
+{
+    public string? RelativeUrl { get; init; }
+    public byte[]? Content { get; init; }
+    public string? ContentType { get; init; }
+}
+
+public static class ReceiptContentHelper
+{
+    public static string? ToDataUrl(byte[]? content, string? contentType)
+    {
+        if (content is null || content.Length == 0 || string.IsNullOrWhiteSpace(contentType))
+        {
+            return null;
+        }
+
+        return $"data:{contentType};base64,{Convert.ToBase64String(content)}";
+    }
 }
 
 public class LocalReceiptStorageService : IReceiptStorageService
@@ -21,7 +41,7 @@ public class LocalReceiptStorageService : IReceiptStorageService
         _environment = environment;
     }
 
-    public async Task<string?> SaveReceiptAsync(string? screenshotBase64, CancellationToken cancellationToken = default)
+    public async Task<ReceiptStorageResult?> SaveReceiptAsync(string? screenshotBase64, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(screenshotBase64))
         {
@@ -30,7 +50,10 @@ public class LocalReceiptStorageService : IReceiptStorageService
 
         if (!screenshotBase64.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
         {
-            return screenshotBase64;
+            return new ReceiptStorageResult
+            {
+                RelativeUrl = screenshotBase64
+            };
         }
 
         var match = DataUrlPattern.Match(screenshotBase64);
@@ -71,6 +94,11 @@ public class LocalReceiptStorageService : IReceiptStorageService
         var filePath = Path.Combine(receiptsDirectory, fileName);
 
         await File.WriteAllBytesAsync(filePath, fileBytes, cancellationToken);
-        return $"/uploads/receipts/{fileName}";
+        return new ReceiptStorageResult
+        {
+            RelativeUrl = $"/uploads/receipts/{fileName}",
+            Content = fileBytes,
+            ContentType = mimeType
+        };
     }
 }

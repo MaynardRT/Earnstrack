@@ -108,10 +108,10 @@ public class TransactionService : ITransactionService
             transactionsQuery = transactionsQuery.Where(t => t.UserId == userId.Value);
         }
 
-        return await transactionsQuery
+        var transactions = await transactionsQuery
             .OrderByDescending(t => t.CreatedAt)
             // The dashboard table is served from one projection so each row already contains its e-wallet or printing detail payload.
-            .Select(t => new TransactionListDto
+            .Select(t => new
             {
                 Id = t.Id,
                 TransactionType = t.TransactionType,
@@ -145,6 +145,14 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.ScreenshotUrl)
                     .FirstOrDefault(),
+                ScreenshotContent = _context.EWalletTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContent)
+                    .FirstOrDefault(),
+                ScreenshotContentType = _context.EWalletTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContentType)
+                    .FirstOrDefault(),
                 PrintingServiceType = _context.PrintingTransactions
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.ServiceType)
@@ -164,6 +172,31 @@ public class TransactionService : ITransactionService
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
+
+        return transactions
+            .Select(transaction => new TransactionListDto
+            {
+                Id = transaction.Id,
+                TransactionType = transaction.TransactionType,
+                Amount = transaction.Amount,
+                ServiceCharge = transaction.ServiceCharge,
+                TotalAmount = transaction.TotalAmount,
+                Status = transaction.Status,
+                FailureReason = transaction.FailureReason,
+                UserFullName = transaction.UserFullName,
+                Provider = transaction.Provider,
+                Method = transaction.Method,
+                AmountBracket = transaction.AmountBracket,
+                ReferenceNumber = transaction.ReferenceNumber,
+                ScreenshotUrl = transaction.ScreenshotUrl,
+                ScreenshotDataUrl = ReceiptContentHelper.ToDataUrl(transaction.ScreenshotContent, transaction.ScreenshotContentType),
+                PrintingServiceType = transaction.PrintingServiceType,
+                PaperSize = transaction.PaperSize,
+                Color = transaction.Color,
+                Quantity = transaction.Quantity,
+                CreatedAt = transaction.CreatedAt
+            })
+            .ToList();
     }
 
     public async Task<List<TransactionListDto>> GetTransactionsByPeriod(Guid? userId, string period)
@@ -185,10 +218,10 @@ public class TransactionService : ITransactionService
             transactionsQuery = transactionsQuery.Where(t => t.UserId == userId.Value);
         }
 
-        return await transactionsQuery
+        var transactions = await transactionsQuery
             .OrderByDescending(t => t.CreatedAt)
             // Period views reuse the same enriched DTO shape as recent transactions to keep the frontend modal logic simple.
-            .Select(t => new TransactionListDto
+            .Select(t => new
             {
                 Id = t.Id,
                 TransactionType = t.TransactionType,
@@ -221,6 +254,14 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.ScreenshotUrl)
                     .FirstOrDefault(),
+                ScreenshotContent = _context.EWalletTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContent)
+                    .FirstOrDefault(),
+                ScreenshotContentType = _context.EWalletTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContentType)
+                    .FirstOrDefault(),
                 PrintingServiceType = _context.PrintingTransactions
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.ServiceType)
@@ -240,6 +281,31 @@ public class TransactionService : ITransactionService
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
+
+        return transactions
+            .Select(transaction => new TransactionListDto
+            {
+                Id = transaction.Id,
+                TransactionType = transaction.TransactionType,
+                Amount = transaction.Amount,
+                ServiceCharge = transaction.ServiceCharge,
+                TotalAmount = transaction.TotalAmount,
+                Status = transaction.Status,
+                FailureReason = transaction.FailureReason,
+                UserFullName = transaction.UserFullName,
+                Provider = transaction.Provider,
+                Method = transaction.Method,
+                AmountBracket = transaction.AmountBracket,
+                ReferenceNumber = transaction.ReferenceNumber,
+                ScreenshotUrl = transaction.ScreenshotUrl,
+                ScreenshotDataUrl = ReceiptContentHelper.ToDataUrl(transaction.ScreenshotContent, transaction.ScreenshotContentType),
+                PrintingServiceType = transaction.PrintingServiceType,
+                PaperSize = transaction.PaperSize,
+                Color = transaction.Color,
+                Quantity = transaction.Quantity,
+                CreatedAt = transaction.CreatedAt
+            })
+            .ToList();
     }
 
     public async Task<TransactionListDto?> CreateEWalletTransaction(Guid userId, CreateEWalletTransactionDto dto)
@@ -268,7 +334,7 @@ public class TransactionService : ITransactionService
         try
         {
             // Receipt storage is resolved before marking the transaction completed so the row only points at durable screenshot locations.
-            var screenshotUrl = await _receiptStorageService.SaveReceiptAsync(dto.ScreenshotBase64);
+            var receipt = await _receiptStorageService.SaveReceiptAsync(dto.ScreenshotBase64);
 
             eWalletTransaction = new EWalletTransaction
             {
@@ -278,7 +344,9 @@ public class TransactionService : ITransactionService
                 Method = dto.Method,
                 AmountBracket = dto.AmountBracket,
                 ReferenceNumber = dto.ReferenceNumber,
-                ScreenshotUrl = screenshotUrl,
+                ScreenshotUrl = receipt?.RelativeUrl,
+                ScreenshotContent = receipt?.Content,
+                ScreenshotContentType = receipt?.ContentType,
                 BaseAmount = dto.BaseAmount
             };
 
@@ -409,6 +477,9 @@ public class TransactionService : ITransactionService
             AmountBracket = transaction.EWalletTransaction?.AmountBracket,
             ReferenceNumber = transaction.EWalletTransaction?.ReferenceNumber,
             ScreenshotUrl = transaction.EWalletTransaction?.ScreenshotUrl,
+            ScreenshotDataUrl = ReceiptContentHelper.ToDataUrl(
+                transaction.EWalletTransaction?.ScreenshotContent,
+                transaction.EWalletTransaction?.ScreenshotContentType),
             PrintingServiceType = transaction.PrintingTransaction?.ServiceType,
             PaperSize = transaction.PrintingTransaction?.PaperSize,
             Color = transaction.PrintingTransaction?.Color,

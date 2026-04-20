@@ -29,6 +29,7 @@ export interface Transaction {
   amountBracket?: string;
   referenceNumber?: string;
   screenshotUrl?: string;
+  screenshotDataUrl?: string;
   printingServiceType?: string;
   paperSize?: string;
   color?: string;
