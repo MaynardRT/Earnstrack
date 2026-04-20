@@ -8,10 +8,6 @@ using eTracker.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var webRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
-Directory.CreateDirectory(webRootPath);
-builder.WebHost.UseWebRoot(webRootPath);
-
 // Keep CORS origin handling config-driven so local and hosted frontends can share the same build.
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
