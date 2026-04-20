@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+.vscode/
+node_modules/
+npm-debug.log
+Dockerfile*
+.dockerignore
+*.user
+*.suo
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
