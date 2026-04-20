@@ -24,6 +24,7 @@ public class AuthService : IAuthService
 
     public async Task<string> GenerateJwtToken(User user)
     {
+        // Emit both framework-standard and legacy role claims so authorization keeps working across older code paths.
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -50,6 +51,7 @@ public class AuthService : IAuthService
 
     public string HashPassword(string password)
     {
+        // BCrypt keeps password storage one-way and slow enough to resist trivial offline cracking.
         return BCrypt.Net.BCrypt.HashPassword(password);
     }
 

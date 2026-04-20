@@ -89,6 +89,7 @@ public class TransactionListDto
     public decimal TotalAmount { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? FailureReason { get; set; }
+    public string? UserFullName { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Precision and index rules are defined here to keep financial data deterministic across migrations and providers.
         // User Configuration
         modelBuilder.Entity<User>()
             .HasKey(u => u.Id);
@@ -152,6 +153,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<DeletedTransaction>()
             .HasIndex(t => t.DeletedAt);
 
+        // One-to-one detail tables keep the shared transaction ledger normalized while preserving service-specific fields.
         modelBuilder.Entity<Transaction>()
             .HasOne(t => t.EWalletTransaction)
             .WithOne(e => e.Transaction)

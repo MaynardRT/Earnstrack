@@ -46,10 +46,17 @@ TestResults/
 .env.local
 appsettings.Development.json
 appsettings.Production.json
+appsettings.Local.json
+appsettings.*.local.json
+appsettings.secrets.json
+appsettings.*.secrets.json
+secrets.json
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
 
 ## OS
 .DS_Store
 Thumbs.db
-
-## Entity Framework
-Migrations/

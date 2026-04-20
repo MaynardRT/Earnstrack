@@ -3,6 +3,7 @@ import { User } from "../types";
 
 const getStoredAuth = () => {
   try {
+    // Storage recovery is defensive because malformed local data should never break app bootstrap.
     const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("authToken");
 
@@ -37,6 +38,7 @@ export const useAuthStore = create<AuthState>((set: SetState<AuthState>) => ({
   ...getStoredAuth(),
 
   setAuth: (user: User, token: string) => {
+    // Persist first, then publish state, so reload behavior matches the in-memory session immediately.
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("authToken", token);
     set({ user, token, isAuthenticated: true });

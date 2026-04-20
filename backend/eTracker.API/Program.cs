@@ -8,6 +8,7 @@ using eTracker.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Keep CORS origin handling config-driven so local and hosted frontends can share the same build.
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
     .Get<string[]>()?
@@ -28,6 +29,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
+    // Render and other reverse proxies terminate TLS upstream, so the app must trust forwarded scheme and IP headers.
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
@@ -73,6 +75,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Database initialization runs once at startup to guarantee baseline data and schema prerequisites before serving traffic.
 await DatabaseInitializer.InitializeAsync(app.Services);
 
 // Configure the HTTP request pipeline

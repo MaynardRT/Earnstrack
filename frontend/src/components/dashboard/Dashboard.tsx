@@ -23,6 +23,7 @@ export const Dashboard: React.FC = () => {
   }, [period]);
 
   const loadData = async () => {
+    // Summary and table data are fetched together so the dashboard reflects one coherent snapshot per period change.
     setLoading(true);
     setError(null);
 
@@ -97,6 +98,7 @@ export const Dashboard: React.FC = () => {
 
         {summary?.statusBreakdown && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Status cards make non-completed work visible without forcing the operator into the raw table first. */}
             <Card>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Pending Transactions
@@ -147,6 +149,9 @@ export const Dashboard: React.FC = () => {
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
                   <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                    Recorded By
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
                     Type
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
@@ -170,7 +175,7 @@ export const Dashboard: React.FC = () => {
                 {transactions.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-8 text-gray-500 dark:text-gray-400"
                     >
                       No transactions yet
@@ -182,6 +187,9 @@ export const Dashboard: React.FC = () => {
                       key={transaction.id}
                       className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
+                      <td className="py-3 px-4 text-gray-900 dark:text-white">
+                        {transaction.userFullName || "Unknown user"}
+                      </td>
                       <td className="py-3 px-4">
                         <span className="inline-flex items-center gap-1">
                           {transaction.transactionType === "EWallet" ? (

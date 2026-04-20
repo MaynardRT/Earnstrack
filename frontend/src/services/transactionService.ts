@@ -8,15 +8,16 @@ import {
 
 export const transactionService = {
   getSummary: async (): Promise<TransactionSummary> => {
+    // Dashboard always opts into the shared summary view so every user reads from the same operational totals.
     const response = await api.get("/transactions/summary", {
-      params: { includeStatusBreakdown: true },
+      params: { includeStatusBreakdown: true, includeAllUsers: true },
     });
     return response.data;
   },
 
   getRecentTransactions: async (days: number = 30): Promise<Transaction[]> => {
     const response = await api.get("/transactions/recent", {
-      params: { days },
+      params: { days, includeAllUsers: true },
     });
     return response.data;
   },
@@ -24,8 +25,9 @@ export const transactionService = {
   getTransactionsByPeriod: async (
     period: "daily" | "weekly" | "monthly",
   ): Promise<Transaction[]> => {
+    // Period filters stay server-driven so date window logic is owned in one place.
     const response = await api.get("/transactions/by-period", {
-      params: { period },
+      params: { period, includeAllUsers: true },
     });
     return response.data;
   },

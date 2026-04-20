@@ -26,17 +26,17 @@ dotnet ef database update
 Before running the application, create your first admin user:
 
 1. Generate a BCrypt hash for your password: https://bcrypt-generator.com/
-2. Insert the admin user into the database:
+2. Copy `database/seed-users.template.sql`, replace the placeholder emails and BCrypt hashes, then run your local script:
 
 ```bash
-# Run the seed script to create test users
-sqlcmd -S localhost -d eTracker -i database/seed-users.sql
+# Example: run your customized local seed script
+sqlcmd -S localhost -d eTracker -i database/seed-users.local.sql
 ```
 
-Test Credentials:
+Suggested local accounts:
 
-- **Admin**: admin@localhost / Admin@123
-- **Seller**: seller@localhost / Seller@123
+- **Admin**: your admin email and password
+- **Seller**: your seller email and password
 
 See [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md) for detailed authentication setup instructions.
 
@@ -77,7 +77,7 @@ npm run dev
     "DefaultConnection": "Server=YOUR_SERVER;Database=eTracker;Trusted_Connection=True;"
   },
   "JwtSettings": {
-    "SecretKey": "your-64-char-secret-key-here",
+    "SecretKey": "replace-with-a-local-dev-secret-of-at-least-32-characters",
     "Issuer": "eTracker",
     "Audience": "eTracker-User",
     "ExpirationHours": 24
@@ -167,16 +167,18 @@ netstat -ano | findstr :5000
 
 ### Google OAuth Fails
 
-- Verify ClientId in `.env.local` matches Google Cloud
-- Check redirect URI is added in Google Console
-- Ensure `appsettings.Development.json` has correct ClientSecret
+### Login Fails
+
+- Verify the user exists in the database
+- Check the BCrypt password hash in your local seed script
+- Ensure `appsettings.Development.json` contains a local JWT secret
 
 ## 📦 Project Stack
 
 - **Backend:** .NET 10.0, ASP.NET Core, Entity Framework Core
 - **Frontend:** React 18, TypeScript, Vite, Zustand, Tailwind CSS
 - **Database:** SQL Server
-- **Auth:** Google OAuth 2.0 + JWT
+- **Auth:** Email/Password + JWT
 - **API:** RESTful with Swagger documentation
 
 ## 🗂️ Directory Quick Reference
@@ -217,13 +219,12 @@ documentation/     → Guides and references
 - [ ] appsettings.Development.json configured
 - [ ] frontend/.env.local created and configured
 - [ ] Database migrations run
-- [ ] Google OAuth credentials configured
+- [ ] Local admin credentials seeded
 
 ## 🔒 Security Quick Notes
 
 - Never commit `.env.local` or secrets
 - JWT Secret: min 64 random characters
-- OAuth Secret: Keep private, never in version control
 - Use environment variables in production
 - Regular security updates required
 

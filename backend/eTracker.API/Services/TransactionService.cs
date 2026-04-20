@@ -27,6 +27,7 @@ public class TransactionService : ITransactionService
 
     public async Task<TransactionSummaryDto> GetTransactionSummary(Guid? userId = null, bool includeStatusBreakdown = false)
     {
+        // Summary windows are calendar-based by design so dashboard totals match how operators read daily, weekly, and monthly performance.
         var today = DateTime.UtcNow.Date;
         var tomorrow = today.AddDays(1);
         var weekStart = GetStartOfWeek(today);
@@ -113,6 +114,11 @@ public class TransactionService : ITransactionService
                 TotalAmount = t.TotalAmount ?? 0,
                 Status = t.Status,
                 FailureReason = t.FailureReason,
+                // Pull the display name inline so shared dashboard views stay readable without exposing the full user entity.
+                UserFullName = _context.Users
+                    .Where(user => user.Id == t.UserId)
+                    .Select(user => user.FullName)
+                    .FirstOrDefault(),
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
@@ -148,6 +154,10 @@ public class TransactionService : ITransactionService
                 TotalAmount = t.TotalAmount ?? 0,
                 Status = t.Status,
                 FailureReason = t.FailureReason,
+                UserFullName = _context.Users
+                    .Where(user => user.Id == t.UserId)
+                    .Select(user => user.FullName)
+                    .FirstOrDefault(),
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
@@ -155,6 +165,7 @@ public class TransactionService : ITransactionService
 
     public async Task<TransactionListDto?> CreateEWalletTransaction(Guid userId, CreateEWalletTransactionDto dto)
     {
+        // Persist the parent row first so every transaction has an auditable record even if downstream details fail to save.
         var serviceFee = await _serviceFeeService.GetServiceFeeForEWallet(dto.Provider, dto.Method);
         var serviceCharge = CalculateEWalletServiceCharge(dto.BaseAmount, serviceFee);
         var totalAmount = dto.BaseAmount + serviceCharge;
@@ -266,6 +277,7 @@ public class TransactionService : ITransactionService
 
     private async Task MarkTransactionAsFailedAsync(Transaction transaction, Exception exception)
     {
+        // Failure details are trimmed and stored back on the transaction so the dashboard can explain partial write failures.
         transaction.Status = "Failed";
         transaction.FailureReason = TruncateFailureReason(exception.InnerException?.Message ?? exception.Message);
         transaction.UpdatedAt = DateTime.UtcNow;
@@ -304,12 +316,14 @@ public class TransactionService : ITransactionService
             TotalAmount = transaction.TotalAmount ?? 0,
             Status = transaction.Status,
             FailureReason = transaction.FailureReason,
+            UserFullName = transaction.User?.FullName,
             CreatedAt = transaction.CreatedAt
         };
     }
 
     private static DateTime GetStartOfWeek(DateTime date)
     {
+        // Monday is treated as the operational week boundary across summaries and reports.
         var offset = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
         return date.AddDays(-offset);
     }

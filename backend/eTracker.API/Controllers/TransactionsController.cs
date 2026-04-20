@@ -22,37 +22,42 @@ public class TransactionsController : ControllerBase
 
     private bool TryGetCurrentUserId(out Guid userId)
     {
+        // Claims parsing is centralized here so every action enforces the same identity contract.
         var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(userIdValue, out userId);
     }
 
     [HttpGet("summary")]
-    public async Task<ActionResult<TransactionSummaryDto>> GetSummary([FromQuery] bool includeStatusBreakdown = false)
+    public async Task<ActionResult<TransactionSummaryDto>> GetSummary([FromQuery] bool includeStatusBreakdown = false, [FromQuery] bool includeAllUsers = false)
     {
         if (!TryGetCurrentUserId(out var userGuid))
             return Unauthorized();
 
-        var summary = await _transactionService.GetTransactionSummary(IsAdmin() ? null : userGuid, includeStatusBreakdown);
+        // Dashboard endpoints can intentionally switch to an all-user view without weakening auth on write operations.
+        Guid? scopedUserId = includeAllUsers || IsAdmin() ? null : userGuid;
+        var summary = await _transactionService.GetTransactionSummary(scopedUserId, includeStatusBreakdown);
         return Ok(summary);
     }
 
     [HttpGet("recent")]
-    public async Task<ActionResult<List<TransactionListDto>>> GetRecentTransactions([FromQuery] int days = 30)
+    public async Task<ActionResult<List<TransactionListDto>>> GetRecentTransactions([FromQuery] int days = 30, [FromQuery] bool includeAllUsers = false)
     {
         if (!TryGetCurrentUserId(out var userGuid))
             return Unauthorized();
 
-        var transactions = await _transactionService.GetRecentTransactions(IsAdmin() ? null : userGuid, days);
+        Guid? scopedUserId = includeAllUsers || IsAdmin() ? null : userGuid;
+        var transactions = await _transactionService.GetRecentTransactions(scopedUserId, days);
         return Ok(transactions);
     }
 
     [HttpGet("by-period")]
-    public async Task<ActionResult<List<TransactionListDto>>> GetTransactionsByPeriod([FromQuery] string period = "monthly")
+    public async Task<ActionResult<List<TransactionListDto>>> GetTransactionsByPeriod([FromQuery] string period = "monthly", [FromQuery] bool includeAllUsers = false)
     {
         if (!TryGetCurrentUserId(out var userGuid))
             return Unauthorized();
 
-        var transactions = await _transactionService.GetTransactionsByPeriod(IsAdmin() ? null : userGuid, period);
+        Guid? scopedUserId = includeAllUsers || IsAdmin() ? null : userGuid;
+        var transactions = await _transactionService.GetTransactionsByPeriod(scopedUserId, period);
         return Ok(transactions);
     }
 

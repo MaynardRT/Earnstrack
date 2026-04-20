@@ -23,6 +23,7 @@ export interface Transaction {
   totalAmount: number;
   status: "Pending" | "Completed" | "Failed";
   failureReason?: string;
+  userFullName?: string;
   createdAt: string;
 }
 

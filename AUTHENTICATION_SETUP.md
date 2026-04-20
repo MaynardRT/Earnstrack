@@ -6,14 +6,14 @@ Earnstrack has been simplified to use **database-only, password-based authentica
 
 ## Quick Start - Test Credentials
 
-Use these credentials to test the application:
+Create your own local credentials to test the application:
 
-| Email              | Password     | Role   |
-| ------------------ | ------------ | ------ |
-| `admin@localhost`  | `Admin@123`  | Admin  |
-| `seller@localhost` | `Seller@123` | Seller |
+| Email                     | Password                       | Role   |
+| ------------------------- | ------------------------------ | ------ |
+| `your-admin@example.com`  | `<your local admin password>`  | Admin  |
+| `your-seller@example.com` | `<your local seller password>` | Seller |
 
-⚠️ **IMPORTANT**: Test credentials only - change immediately in production!
+⚠️ **IMPORTANT**: Do not commit even test passwords to a public repository. Use locally generated BCrypt hashes only.
 
 ## Key Changes
 
@@ -83,10 +83,10 @@ Before the first login, you must create at least one Admin user. You have two op
 2. Run the seeding script:
 
    ```bash
-   sqlcmd -S localhost -d eTracker -i database/seed-users.sql
+   sqlcmd -S localhost -d eTracker -i database/seed-users.local.sql
    ```
 
-3. Update `seed-users.sql` with:
+3. Create that local file from `database/seed-users.template.sql` and update it with:
    - Actual BCrypt-hashed passwords
    - Desired email addresses and names
 
@@ -141,7 +141,7 @@ Login with email and password.
 ```json
 {
   "email": "user@example.com",
-  "password": "password123"
+  "password": "<user password>"
 }
 ```
 
@@ -179,7 +179,7 @@ Create a new user (admin-only endpoint).
 {
   "email": "newuser@example.com",
   "fullName": "New User",
-  "password": "InitialPassword123",
+  "password": "<temporary password>",
   "role": "Seller"
 }
 ```

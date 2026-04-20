@@ -35,14 +35,6 @@ Update the connection string in `appsettings.Development.json`:
 dotnet ef database update
 ```
 
-SQLite is used for local development. The database file will be created automatically when the application runs:
-
-```bash
-# No manual setup needed - SQLite database created automatically
-# File location: backend/eTracker.API/eTracker_Dev.db (development)
-# File location: backend/eTracker.API/eTracker.db (production)
-```
-
 ### 3. Backend Setup
 
 ```bash
@@ -81,7 +73,6 @@ cp .env.example .env.local
 
 # Update .env.local with:
 # - Your API URL (http://localhost:5000/api)
-# - Your Google OAuth Client ID
 
 # Start development server
 npm run dev
@@ -198,7 +189,7 @@ curl -X GET "http://localhost:5000/api/transactions/summary" \
 
 ### "Module not found" (Frontend)
 
-- Delete `node_modules` and `.next` folder
+- Delete `node_modules` and reinstall dependencies
 - Run `npm install` again
 
 ### "Port already in use"
@@ -215,11 +206,11 @@ curl -X GET "http://localhost:5000/api/transactions/summary" \
 
 ## Next Steps
 
-1. Implement Google OAuth callback handler in AuthController
-2. Add file upload handling for screenshots
-3. Implement service fee calculations
-4. Add email notifications
-5. Setup CI/CD pipeline
+1. Add file upload handling for screenshots
+2. Expand service fee calculations
+3. Add email notifications if needed
+4. Setup CI/CD pipeline
+5. Review dependency vulnerability warnings regularly
 
 ## Documentation
 

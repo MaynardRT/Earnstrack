@@ -2,7 +2,7 @@ import api from "./api";
 import { ServiceFee, User } from "../types";
 
 export const settingsService = {
-  // Service Fees
+  // Settings endpoints are intentionally thin wrappers so components stay declarative and transport details remain centralized.
   getServiceFees: async (): Promise<ServiceFee[]> => {
     const response = await api.get("/settings/service-fees");
     return response.data;
@@ -25,7 +25,7 @@ export const settingsService = {
     await api.delete(`/settings/service-fees/${id}`);
   },
 
-  // User Management
+  // Admin-facing user management lives here to keep it aligned with the settings surface instead of the auth bootstrap flow.
   getUsers: async (): Promise<User[]> => {
     const response = await api.get("/settings/users");
     return response.data;

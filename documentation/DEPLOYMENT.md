@@ -87,10 +87,6 @@ Update `appsettings.Production.json`:
     "Issuer": "eTracker",
     "Audience": "eTracker-User",
     "ExpirationHours": 24
-  },
-  "GoogleOAuth": {
-    "ClientId": "YOUR_PRODUCTION_CLIENT_ID",
-    "ClientSecret": "YOUR_PRODUCTION_SECRET"
   }
 }
 ```
@@ -375,7 +371,6 @@ Schedule with cron:
 - [ ] Monitoring and alerts configured
 - [ ] Error logging working
 - [ ] Email notifications tested
-- [ ] Google OAuth configured for production domain
 - [ ] Rate limiting enabled
 - [ ] Security headers configured
 

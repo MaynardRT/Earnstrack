@@ -48,6 +48,24 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+*.local.env
+
+# Local secrets and certificates
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+**/appsettings.Local.json
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/appsettings.*.local.json
+**/appsettings.secrets.json
+**/appsettings.*.secrets.json
+**/secrets.json
+**/.env.local
+**/.env.*.local
+database/*.local.sql
 
 # IDE specific files
 *.swp

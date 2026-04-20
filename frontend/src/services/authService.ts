@@ -8,6 +8,7 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
+    // Client storage is cleared even if the backend logout endpoint is eventually reduced to a no-op for JWT flows.
     await api.post("/auth/logout");
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");

@@ -29,6 +29,7 @@ public class TransactionRetentionService : ITransactionRetentionService
 
         while (true)
         {
+            // Archive in bounded batches to avoid long-running deletes and oversized EF change trackers.
             var expiredTransactions = await _context.Transactions
                 .Include(t => t.EWalletTransaction)
                 .Include(t => t.PrintingTransaction)
@@ -128,6 +129,7 @@ public class TransactionRetentionHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Run one sweep on boot so retention is enforced even on low-traffic deployments.
         await RunSweepAsync(stoppingToken);
 
         using var timer = new PeriodicTimer(SweepInterval);
@@ -142,6 +144,7 @@ public class TransactionRetentionHostedService : BackgroundService
     {
         try
         {
+            // Resolve scoped services per sweep so DbContext lifetime stays aligned with a single archival job.
             using var scope = _scopeFactory.CreateScope();
             var retentionService = scope.ServiceProvider.GetRequiredService<ITransactionRetentionService>();
             await retentionService.ArchiveExpiredTransactionsAsync(cancellationToken: cancellationToken);

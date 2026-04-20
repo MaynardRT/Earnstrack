@@ -45,6 +45,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { isAuthenticated } = useAuthStore();
 
+  // Route guarding stays at the edge so feature pages can assume auth state is already settled.
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -57,10 +58,12 @@ function App() {
   const loadFromStorage = useAuthStore((state) => state.loadFromStorage);
 
   useEffect(() => {
+    // Theme is applied at the document root so Tailwind dark variants work across the entire app shell.
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
   useEffect(() => {
+    // Auth hydration happens once on boot to avoid a flash of logged-out routing after refresh.
     loadFromStorage();
   }, [loadFromStorage]);
 

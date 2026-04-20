@@ -27,33 +27,21 @@ Or use an online generator: https://www.random.org/bytes/
 }
 ```
 
-## Google OAuth Configuration
+## Authentication Configuration
 
-### 1. Create Google Cloud Project
+The application uses JWT plus database-backed email/password authentication.
 
-- Go to [Google Cloud Console](https://console.cloud.google.com/)
-- Create new project
-- Enable "Google+ API"
+### Local Development
 
-### 2. Create OAuth 2.0 Credentials
-
-- Go to Credentials
-- Click "Create Credentials" → "OAuth client ID"
-- Select "Web application"
-- Add authorized redirect URIs:
-  - Development: `http://localhost:5173`
-  - Production: `https://yourdomain.com`
-
-### 3. Configure in appsettings.json
+Use your local `appsettings.Development.json` only on your machine:
 
 ```json
-"GoogleOAuth": {
-  "ClientId": "your-client-id.apps.googleusercontent.com",
-  "ClientSecret": "your-client-secret"
+"JwtSettings": {
+  "SecretKey": "replace-with-a-local-secret-of-at-least-32-characters"
 }
 ```
 
-> ⚠️ **Security Warning:** Never commit `ClientSecret` to version control. Use environment variables or secrets manager.
+Create local users with BCrypt password hashes using `database/seed-users.template.sql`.
 
 ## Backend Configuration (appsettings.json)
 
@@ -74,7 +62,7 @@ For development environment (`appsettings.Development.json`):
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=eTracker_Dev.db"
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=eTracker;Trusted_Connection=True;TrustServerCertificate=True;"
   }
 }
 ```
@@ -92,44 +80,19 @@ For development environment (`appsettings.Development.json`):
 }
 ```
 
-### Google OAuth Configuration
-
-```json
-{
-  "GoogleOAuth": {
-    "ClientId": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
-    "ClientSecret": "YOUR_GOOGLE_CLIENT_SECRET"
-  }
-}
-```
-
 ## Frontend Configuration
 
 ### .env.local
 
 ```
 VITE_API_URL=http://localhost:5000/api
-VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com
 ```
 
 ### .env.production
 
 ```
 VITE_API_URL=https://your-production-api.com/api
-VIT_GOOGLE_CLIENT_ID=YOUR_PRODUCTION_GOOGLE_CLIENT_ID
 ```
-
-## Setting Up Google OAuth
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project for eTracker
-3. Enable the Google+ API
-4. Create OAuth 2.0 credentials (Web Application)
-5. Add authorized redirect URIs:
-   - `http://localhost:5173` (Development)
-   - `http://localhost:3000` (Alternative)
-   - Your production domain
-6. Copy the Client ID and Client Secret
 
 ## Database Setup
 

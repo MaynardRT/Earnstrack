@@ -33,10 +33,10 @@ eTracker/
 
 ### Backend
 
-- **Framework**: ASP.NET Core 8.0
+- **Framework**: ASP.NET Core 10.0
 - **ORM**: Entity Framework Core
 - **Database**: MS SQL Server
-- **Authentication**: JWT + Google OAuth 2.0
+- **Authentication**: JWT + email/password
 - **API Documentation**: Swagger/OpenAPI
 
 ### Frontend
@@ -53,9 +53,9 @@ eTracker/
 
 ### Authentication
 
-- Google OAuth 2.0 login integration
+- Email/password login
 - JWT-based session management
-- User registration with role selection (Admin/Seller)
+- Admin-managed user creation (Admin/Seller)
 - Secure logout with token cleanup
 
 ### Dashboard
@@ -144,11 +144,10 @@ The API will be available at `http://localhost:5000` (configured in appsettings.
    npm install
    ```
 
-3. Create `.env.example` file and update with your API URL and Google OAuth credentials:
+3. Create `.env.local` and update it with your API URL:
 
    ```
-   REACT_APP_API_URL=http://localhost:5000/api
-   REACT_APP_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+   VITE_API_URL=http://localhost:5000/api
    ```
 
 4. Start development server:
@@ -166,21 +165,19 @@ Update `appsettings.json` with:
 
 - Database connection string
 - JWT secret key (change from default)
-- Google OAuth credentials
 
 ### Environment Variables (Frontend)
 
 Create `.env.local` file with:
 
 - API base URL
-- Google OAuth Client ID
 
 ## API Endpoints
 
 ### Authentication
 
-- `POST /api/auth/google-login` - Login with Google token
-- `POST /api/auth/register` - Complete user registration
+- `POST /api/auth/login` - Login with email and password
+- `POST /api/auth/admin/create-user` - Create user (Admin only)
 - `POST /api/auth/logout` - Logout current user
 - `GET /api/auth/me` - Get current user info
 

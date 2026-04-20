@@ -4,21 +4,23 @@ A full-stack application for managing e-wallet and printing service transactions
 
 ## 🔐 Test Credentials
 
-After running setup, use these credentials to log in:
+Create your own local credentials during setup. Do not commit shared passwords to a public repository.
 
 ```
-Email: admin@localhost
-Password: Admin@123
+Email: your-admin-email@example.com
+Password: <your local admin password>
 Role: Admin
 ```
 
 Or for a seller account:
 
 ```
-Email: seller@localhost
-Password: Seller@123
+Email: your-seller-email@example.com
+Password: <your local seller password>
 Role: Seller
 ```
+
+Use the template in `database/seed-users.template.sql` to create local accounts with your own BCrypt password hashes.
 
 ---
 
@@ -121,10 +123,10 @@ eTracker/
 
 ## 🔐 Authentication
 
-The application uses Google OAuth 2.0 with JWT tokens for secure authentication:
+The application uses email/password authentication with JWT tokens for secure access:
 
-1. Users login with Google account
-2. Google token is validated on the backend
+1. Users login with email and password
+2. Credentials are validated on the backend
 3. JWT token is generated and stored in localStorage
 4. All API requests include the JWT in the Authorization header
 
@@ -196,7 +198,7 @@ npm run build
 
 ### Authentication Issues
 
-- Verify Google OAuth credentials are set correctly
+- Verify the JWT secret key and login credentials are configured correctly
 - Check JWT secret key is properly configured
 - Ensure tokens have not expired
 
