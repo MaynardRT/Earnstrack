@@ -7,7 +7,7 @@ namespace eTracker.API.Services;
 
 public interface IServiceFeeService
 {
-    Task<ServiceFee?> GetServiceFeeForEWallet(string provider, string method);
+    Task<ServiceFee?> GetServiceFeeForEWallet(string provider, string method, decimal baseAmount);
     Task<ServiceFee?> GetServiceFeeForPrinting(string serviceType);
     Task<List<ServiceFeeDto>> GetAllServiceFees();
     Task<ServiceFeeDto?> CreateServiceFee(CreateServiceFeeDto dto);
@@ -24,13 +24,19 @@ public class ServiceFeeService : IServiceFeeService
         _context = context;
     }
 
-    public async Task<ServiceFee?> GetServiceFeeForEWallet(string provider, string method)
+    public async Task<ServiceFee?> GetServiceFeeForEWallet(string provider, string method, decimal baseAmount)
     {
         return await _context.ServiceFees
-            .FirstOrDefaultAsync(f =>
+            .Where(f =>
                 f.ServiceType == "EWallet" &&
-                f.ProviderType == provider &&
-                f.MethodType == method);
+                (string.IsNullOrWhiteSpace(f.ProviderType) || f.ProviderType == provider) &&
+                (string.IsNullOrWhiteSpace(f.MethodType) || f.MethodType == method) &&
+                (!f.BracketMinAmount.HasValue || f.BracketMinAmount <= baseAmount) &&
+                (!f.BracketMaxAmount.HasValue || f.BracketMaxAmount >= baseAmount))
+            .OrderByDescending(f => f.ProviderType == provider)
+            .ThenByDescending(f => f.MethodType == method)
+            .ThenByDescending(f => f.BracketMinAmount)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<ServiceFee?> GetServiceFeeForPrinting(string serviceType)
@@ -51,7 +57,9 @@ public class ServiceFeeService : IServiceFeeService
                 ProviderType = f.ProviderType,
                 MethodType = f.MethodType,
                 FeePercentage = f.FeePercentage,
-                FlatFee = f.FlatFee
+                FlatFee = f.FlatFee,
+                BracketMinAmount = f.BracketMinAmount,
+                BracketMaxAmount = f.BracketMaxAmount
             })
             .ToListAsync();
     }
@@ -65,7 +73,9 @@ public class ServiceFeeService : IServiceFeeService
             ProviderType = dto.ProviderType,
             MethodType = dto.MethodType,
             FeePercentage = dto.FeePercentage,
-            FlatFee = dto.FlatFee
+            FlatFee = dto.FlatFee,
+            BracketMinAmount = dto.BracketMinAmount,
+            BracketMaxAmount = dto.BracketMaxAmount
         };
 
         _context.ServiceFees.Add(serviceFee);
@@ -78,7 +88,9 @@ public class ServiceFeeService : IServiceFeeService
             ProviderType = serviceFee.ProviderType,
             MethodType = serviceFee.MethodType,
             FeePercentage = serviceFee.FeePercentage,
-            FlatFee = serviceFee.FlatFee
+            FlatFee = serviceFee.FlatFee,
+            BracketMinAmount = serviceFee.BracketMinAmount,
+            BracketMaxAmount = serviceFee.BracketMaxAmount
         };
     }
 
@@ -87,11 +99,21 @@ public class ServiceFeeService : IServiceFeeService
         var serviceFee = await _context.ServiceFees.FindAsync(id);
         if (serviceFee == null) return null;
 
-        if (dto.FeePercentage.HasValue)
-            serviceFee.FeePercentage = dto.FeePercentage;
+        if (!string.IsNullOrWhiteSpace(dto.ServiceType))
+            serviceFee.ServiceType = dto.ServiceType;
 
-        if (dto.FlatFee.HasValue)
-            serviceFee.FlatFee = dto.FlatFee;
+        serviceFee.ProviderType = string.IsNullOrWhiteSpace(dto.ProviderType)
+            ? null
+            : dto.ProviderType;
+
+        serviceFee.MethodType = string.IsNullOrWhiteSpace(dto.MethodType)
+            ? null
+            : dto.MethodType;
+
+        serviceFee.FeePercentage = dto.FeePercentage;
+        serviceFee.FlatFee = dto.FlatFee;
+        serviceFee.BracketMinAmount = dto.BracketMinAmount;
+        serviceFee.BracketMaxAmount = dto.BracketMaxAmount;
 
         serviceFee.UpdatedAt = DateTime.UtcNow;
 
@@ -105,7 +127,9 @@ public class ServiceFeeService : IServiceFeeService
             ProviderType = serviceFee.ProviderType,
             MethodType = serviceFee.MethodType,
             FeePercentage = serviceFee.FeePercentage,
-            FlatFee = serviceFee.FlatFee
+            FlatFee = serviceFee.FlatFee,
+            BracketMinAmount = serviceFee.BracketMinAmount,
+            BracketMaxAmount = serviceFee.BracketMaxAmount
         };
     }
 

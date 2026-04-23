@@ -95,6 +95,93 @@ public class TransactionServiceTests
     }
 
     [Fact]
+    public async Task GetTransactionSummary_ForEWallet_UsesOnlyServiceChargeForEarningsTotals()
+    {
+        using var context = CreateContext();
+        var todayAtNoon = DateTime.UtcNow.Date.AddHours(12);
+        var userId = Guid.NewGuid();
+
+        context.Transactions.AddRange(
+            new Transaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TransactionType = "EWallet",
+                Amount = 1500m,
+                ServiceCharge = 10m,
+                TotalAmount = 1510m,
+                Status = "Completed",
+                CreatedAt = todayAtNoon,
+                UpdatedAt = todayAtNoon
+            },
+            new Transaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TransactionType = "EWallet",
+                Amount = 5000m,
+                ServiceCharge = 100m,
+                TotalAmount = 5100m,
+                Status = "Completed",
+                CreatedAt = todayAtNoon,
+                UpdatedAt = todayAtNoon
+            },
+            new Transaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TransactionType = "Printing",
+                Amount = 300m,
+                ServiceCharge = 0m,
+                TotalAmount = 300m,
+                Status = "Completed",
+                CreatedAt = todayAtNoon,
+                UpdatedAt = todayAtNoon
+            },
+            new Transaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TransactionType = "EWallet",
+                Amount = 2500m,
+                ServiceCharge = 15m,
+                TotalAmount = 2515m,
+                Status = "Pending",
+                CreatedAt = todayAtNoon,
+                UpdatedAt = todayAtNoon
+            },
+            new Transaction
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TransactionType = "EWallet",
+                Amount = 3000m,
+                ServiceCharge = 20m,
+                TotalAmount = 3020m,
+                Status = "Failed",
+                CreatedAt = todayAtNoon,
+                UpdatedAt = todayAtNoon
+            });
+        await context.SaveChangesAsync();
+
+        var service = CreateService(context);
+
+        var summary = await service.GetTransactionSummary(null, includeStatusBreakdown: true);
+
+        Assert.Equal(410m, summary.DailyTotal);
+        Assert.Equal(410m, summary.WeeklyTotal);
+        Assert.Equal(410m, summary.MonthlyTotal);
+        Assert.Equal(5, summary.TotalTransactions);
+        Assert.NotNull(summary.StatusBreakdown);
+        Assert.Equal(3, summary.StatusBreakdown!.CompletedTransactions);
+        Assert.Equal(1, summary.StatusBreakdown.PendingTransactions);
+        Assert.Equal(1, summary.StatusBreakdown.FailedTransactions);
+        Assert.Equal(410m, summary.StatusBreakdown.CompletedTotal);
+        Assert.Equal(15m, summary.StatusBreakdown.PendingTotal);
+        Assert.Equal(20m, summary.StatusBreakdown.FailedTotal);
+    }
+
+    [Fact]
     public async Task CreatePrintingTransaction_UsesSubtotalWithoutServiceChargeAndMarksCompleted()
     {
         using var context = CreateContext();
@@ -117,18 +204,23 @@ public class TransactionServiceTests
         Assert.Null(result.FailureReason);
     }
 
-    [Fact]
-    public async Task CreateEWalletTransaction_UsesFivePercentChargeAtOrAbove5001()
+    [Theory]
+    [InlineData(500, 5)]
+    [InlineData(501, 10)]
+    [InlineData(1500, 10)]
+    [InlineData(1501, 15)]
+    [InlineData(2500, 15)]
+    [InlineData(2501, 20)]
+    [InlineData(3000, 20)]
+    [InlineData(3001, 50)]
+    [InlineData(4000, 50)]
+    [InlineData(4001, 100)]
+    [InlineData(5000, 100)]
+    [InlineData(5001, 150)]
+    public async Task CreateEWalletTransaction_UsesConfiguredTieredServiceCharge(decimal baseAmount, decimal expectedServiceCharge)
     {
         using var context = CreateContext();
-        var service = CreateService(context, new StubServiceFeeService(new ServiceFee
-        {
-            Id = Guid.NewGuid(),
-            ServiceType = "EWallet",
-            ProviderType = "GCash",
-            MethodType = "CashIn",
-            FeePercentage = 1m
-        }));
+        var service = CreateService(context);
 
         var result = await service.CreateEWalletTransaction(Guid.NewGuid(), new CreateEWalletTransactionDto
         {
@@ -136,12 +228,12 @@ public class TransactionServiceTests
             Method = "CashIn",
             AmountBracket = "5000+",
             ReferenceNumber = "REF-001",
-            BaseAmount = 6000m
+            BaseAmount = baseAmount
         });
 
         Assert.NotNull(result);
-        Assert.Equal(300m, result!.ServiceCharge);
-        Assert.Equal(6300m, result.TotalAmount);
+        Assert.Equal(expectedServiceCharge, result!.ServiceCharge);
+        Assert.Equal(baseAmount + expectedServiceCharge, result.TotalAmount);
         Assert.Equal("Completed", result.Status);
     }
 
@@ -239,7 +331,7 @@ public class TransactionServiceTests
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            TransactionType = "EWallet",
+            TransactionType = "Printing",
             Amount = totalAmount,
             ServiceCharge = 0m,
             TotalAmount = totalAmount,
@@ -264,7 +356,7 @@ public class TransactionServiceTests
             _eWalletFee = eWalletFee;
         }
 
-        public Task<ServiceFee?> GetServiceFeeForEWallet(string provider, string method)
+        public Task<ServiceFee?> GetServiceFeeForEWallet(string provider, string method, decimal baseAmount)
             => Task.FromResult(_eWalletFee);
 
         public Task<ServiceFee?> GetServiceFeeForPrinting(string serviceType)

@@ -79,4 +79,6 @@ export interface ServiceFee {
   methodType?: string;
   feePercentage?: number;
   flatFee?: number;
+  bracketMinAmount?: number;
+  bracketMaxAmount?: number;
 }

@@ -49,15 +49,21 @@ public class TransactionService : ITransactionService
 
         var dailyTotal = await transactionsQuery
             .Where(t => t.CreatedAt >= today && t.CreatedAt < tomorrow && t.Status == "Completed")
-            .SumAsync(t => t.TotalAmount ?? 0);
+            .SumAsync(t => t.TransactionType == "EWallet"
+                ? (t.ServiceCharge ?? 0)
+                : (t.TotalAmount ?? 0));
 
         var weeklyTotal = await transactionsQuery
             .Where(t => t.CreatedAt >= weekStart && t.CreatedAt < nextWeekStart && t.Status == "Completed")
-            .SumAsync(t => t.TotalAmount ?? 0);
+            .SumAsync(t => t.TransactionType == "EWallet"
+                ? (t.ServiceCharge ?? 0)
+                : (t.TotalAmount ?? 0));
 
         var monthlyTotal = await transactionsQuery
             .Where(t => t.CreatedAt >= monthStart && t.CreatedAt < nextMonthStart && t.Status == "Completed")
-            .SumAsync(t => t.TotalAmount ?? 0);
+            .SumAsync(t => t.TransactionType == "EWallet"
+                ? (t.ServiceCharge ?? 0)
+                : (t.TotalAmount ?? 0));
 
         var totalTransactions = await transactionsQuery.CountAsync();
 
@@ -71,7 +77,9 @@ public class TransactionService : ITransactionService
                 {
                     Status = g.Key,
                     Count = g.Count(),
-                    Total = g.Sum(t => t.TotalAmount ?? 0)
+                    Total = g.Sum(t => t.TransactionType == "EWallet"
+                        ? (t.ServiceCharge ?? 0)
+                        : (t.TotalAmount ?? 0))
                 })
                 .ToListAsync();
 
@@ -311,7 +319,7 @@ public class TransactionService : ITransactionService
     public async Task<TransactionListDto?> CreateEWalletTransaction(Guid userId, CreateEWalletTransactionDto dto)
     {
         // Persist the parent row first so every transaction has an auditable record even if downstream details fail to save.
-        var serviceFee = await _serviceFeeService.GetServiceFeeForEWallet(dto.Provider, dto.Method);
+        var serviceFee = await _serviceFeeService.GetServiceFeeForEWallet(dto.Provider, dto.Method, dto.BaseAmount);
         var serviceCharge = CalculateEWalletServiceCharge(dto.BaseAmount, serviceFee);
         var totalAmount = dto.BaseAmount + serviceCharge;
 
@@ -520,16 +528,32 @@ public class TransactionService : ITransactionService
 
     private decimal CalculateEWalletServiceCharge(decimal baseAmount, ServiceFee? fee)
     {
-        if (baseAmount >= 5001)
-        {
-            return baseAmount * 0.05m;
-        }
-
         if (fee != null)
         {
             return CalculateServiceCharge(baseAmount, fee);
         }
 
-        return baseAmount * 0.01m;
+        if (baseAmount <= 500)
+        {
+            return 5m;
+        }
+
+        if (baseAmount <= 1500)
+        {
+            return 10m;
+        }
+
+        if (baseAmount <= 2500)
+        {
+            return 15m;
+        }
+
+        if (baseAmount <= 3000)
+        {
+            return 20m;
+        }
+
+        var thousandBandsAboveThreeThousand = (int)Math.Ceiling((baseAmount - 3000m) / 1000m);
+        return thousandBandsAboveThreeThousand * 50m;
     }
 }

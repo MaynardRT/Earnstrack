@@ -5,9 +5,68 @@ import { ServiceFee, User } from "../../types";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Alert } from "../common/Alert";
+import { Skeleton } from "../common/Skeleton";
 import { Download } from "lucide-react";
 import { useAuthStore } from "../../context/authStore";
 import { UserAvatar } from "../common/UserAvatar";
+
+type FeeEditorForm = {
+  serviceType: string;
+  providerType: string;
+  methodType: string;
+  feeMode: "flat" | "percentage";
+  feeValue: string;
+  bracketMinAmount: string;
+  bracketMaxAmount: string;
+};
+
+const KNOWN_SERVICE_TYPES = ["EWallet", "Printing"] as const;
+const KNOWN_EWALLET_PROVIDERS = ["GCash", "Maya"] as const;
+const KNOWN_EWALLET_METHODS = ["CashIn", "CashOut"] as const;
+const KNOWN_PRINTING_TYPES = ["Printing", "Scanning", "Photocopy"] as const;
+
+const getKnownOptions = (currentValue: string, options: readonly string[]) => {
+  if (!currentValue || options.includes(currentValue)) {
+    return [...options];
+  }
+
+  return [currentValue, ...options];
+};
+
+const SettingsTableSkeleton: React.FC<{ columns: number; rows: number }> = ({
+  columns,
+  rows,
+}) => {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-200 dark:border-gray-700">
+            {Array.from({ length: columns }).map((_, index) => (
+              <th key={index} className="px-4 py-3">
+                <Skeleton className="h-4 w-24" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }).map((_, rowIndex) => (
+            <tr
+              key={rowIndex}
+              className="border-b border-gray-100 dark:border-gray-700"
+            >
+              {Array.from({ length: columns }).map((_, columnIndex) => (
+                <td key={columnIndex} className="px-4 py-4">
+                  <Skeleton className="h-4 w-full max-w-[12rem]" />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 export const SettingsPage: React.FC = () => {
   const { user, updateUser } = useAuthStore();
@@ -29,6 +88,63 @@ export const SettingsPage: React.FC = () => {
   });
   const [creatingUser, setCreatingUser] = useState(false);
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
+  const [savingFeeId, setSavingFeeId] = useState<string | null>(null);
+  const [isAddingFee, setIsAddingFee] = useState(false);
+  const [isCreatingFee, setIsCreatingFee] = useState(false);
+  const [deletingFeeId, setDeletingFeeId] = useState<string | null>(null);
+  const [feeEditorForm, setFeeEditorForm] = useState<FeeEditorForm | null>(
+    null,
+  );
+  const isServiceFeeMutating =
+    savingFeeId !== null || isCreatingFee || deletingFeeId !== null;
+
+  const serviceFeeGroups = Array.from(
+    serviceFees.reduce((groups, fee) => {
+      const groupKey = fee.serviceType || "Other";
+      const groupFees = groups.get(groupKey) ?? [];
+      groupFees.push(fee);
+      groups.set(groupKey, groupFees);
+      return groups;
+    }, new Map<string, ServiceFee[]>()),
+  ).sort(([left], [right]) => {
+    const leftIndex = KNOWN_SERVICE_TYPES.indexOf(
+      left as (typeof KNOWN_SERVICE_TYPES)[number],
+    );
+    const rightIndex = KNOWN_SERVICE_TYPES.indexOf(
+      right as (typeof KNOWN_SERVICE_TYPES)[number],
+    );
+
+    if (leftIndex === -1 && rightIndex === -1) {
+      return left.localeCompare(right);
+    }
+
+    if (leftIndex === -1) {
+      return 1;
+    }
+
+    if (rightIndex === -1) {
+      return -1;
+    }
+
+    return leftIndex - rightIndex;
+  });
+
+  const serviceFeeSections: Array<[string, ServiceFee[]]> = [
+    ...serviceFeeGroups,
+    ...(isAddingFee &&
+    feeEditorForm &&
+    !serviceFeeGroups.some(
+      ([serviceType]) => serviceType === feeEditorForm.serviceType,
+    )
+      ? [
+          [feeEditorForm.serviceType || "New Rule", []] as [
+            string,
+            ServiceFee[],
+          ],
+        ]
+      : []),
+  ];
 
   useEffect(() => {
     if (activeTab === "fees") loadServiceFees();
@@ -114,6 +230,270 @@ export const SettingsPage: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError("Failed to update user status");
+    }
+  };
+
+  const beginEditServiceFee = (fee: ServiceFee) => {
+    setError(null);
+    setEditingFeeId(fee.id);
+    setFeeEditorForm({
+      serviceType: fee.serviceType,
+      providerType: fee.providerType ?? "",
+      methodType: fee.methodType ?? "",
+      feeMode: fee.feePercentage !== undefined ? "percentage" : "flat",
+      feeValue:
+        fee.feePercentage !== undefined
+          ? String(fee.feePercentage)
+          : String(fee.flatFee ?? 0),
+      bracketMinAmount:
+        fee.bracketMinAmount !== undefined ? String(fee.bracketMinAmount) : "",
+      bracketMaxAmount:
+        fee.bracketMaxAmount !== undefined ? String(fee.bracketMaxAmount) : "",
+    });
+  };
+
+  const cancelEditServiceFee = () => {
+    setEditingFeeId(null);
+    setIsAddingFee(false);
+    setFeeEditorForm(null);
+    setError(null);
+  };
+
+  const beginAddServiceFee = () => {
+    setError(null);
+    setEditingFeeId(null);
+    setIsAddingFee(true);
+    setFeeEditorForm({
+      serviceType: "EWallet",
+      providerType: "",
+      methodType: "",
+      feeMode: "flat",
+      feeValue: "",
+      bracketMinAmount: "",
+      bracketMaxAmount: "",
+    });
+  };
+
+  const updateFeeEditorForm = (updates: Partial<FeeEditorForm>) => {
+    if (!feeEditorForm) {
+      return;
+    }
+
+    const nextForm = {
+      ...feeEditorForm,
+      ...updates,
+    };
+
+    if (updates.serviceType === "EWallet") {
+      nextForm.providerType = KNOWN_EWALLET_PROVIDERS.includes(
+        nextForm.providerType as (typeof KNOWN_EWALLET_PROVIDERS)[number],
+      )
+        ? nextForm.providerType
+        : "GCash";
+      nextForm.methodType = KNOWN_EWALLET_METHODS.includes(
+        nextForm.methodType as (typeof KNOWN_EWALLET_METHODS)[number],
+      )
+        ? nextForm.methodType
+        : "CashIn";
+    }
+
+    if (updates.serviceType === "Printing") {
+      nextForm.providerType = KNOWN_PRINTING_TYPES.includes(
+        nextForm.providerType as (typeof KNOWN_PRINTING_TYPES)[number],
+      )
+        ? nextForm.providerType
+        : "Printing";
+      nextForm.methodType = "";
+    }
+
+    setFeeEditorForm(nextForm);
+  };
+
+  const saveServiceFeeEdit = async (fee: ServiceFee) => {
+    if (user?.role !== "Admin") {
+      setError("Only admins can update service fees.");
+      return;
+    }
+
+    if (!feeEditorForm) {
+      setError("Fee editor is not initialized.");
+      return;
+    }
+
+    if (!feeEditorForm.serviceType.trim()) {
+      setError("Service type is required.");
+      return;
+    }
+
+    const parsedFeeValue = Number(feeEditorForm.feeValue);
+    if (!Number.isFinite(parsedFeeValue) || parsedFeeValue < 0) {
+      setError("Please provide a valid non-negative fee value.");
+      return;
+    }
+
+    const hasBracketMin = feeEditorForm.bracketMinAmount.trim() !== "";
+    const hasBracketMax = feeEditorForm.bracketMaxAmount.trim() !== "";
+    const parsedBracketMin = hasBracketMin
+      ? Number(feeEditorForm.bracketMinAmount)
+      : undefined;
+    const parsedBracketMax = hasBracketMax
+      ? Number(feeEditorForm.bracketMaxAmount)
+      : undefined;
+
+    if (
+      (hasBracketMin &&
+        (!Number.isFinite(parsedBracketMin) || (parsedBracketMin ?? 0) < 0)) ||
+      (hasBracketMax &&
+        (!Number.isFinite(parsedBracketMax) || (parsedBracketMax ?? 0) < 0))
+    ) {
+      setError("Bracket values must be valid non-negative numbers.");
+      return;
+    }
+
+    if (
+      parsedBracketMin !== undefined &&
+      parsedBracketMax !== undefined &&
+      parsedBracketMin > parsedBracketMax
+    ) {
+      setError("Bracket min amount cannot be greater than bracket max amount.");
+      return;
+    }
+
+    try {
+      setSavingFeeId(fee.id);
+      await settingsService.updateServiceFee(fee.id, {
+        serviceType: feeEditorForm.serviceType.trim(),
+        providerType: feeEditorForm.providerType.trim() || undefined,
+        methodType: feeEditorForm.methodType.trim() || undefined,
+        feePercentage:
+          feeEditorForm.feeMode === "percentage" ? parsedFeeValue : undefined,
+        flatFee: feeEditorForm.feeMode === "flat" ? parsedFeeValue : undefined,
+        bracketMinAmount: parsedBracketMin,
+        bracketMaxAmount: parsedBracketMax,
+      });
+
+      await loadServiceFees();
+      setSuccess("Service fee updated successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+      cancelEditServiceFee();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update service fee",
+      );
+    } finally {
+      setSavingFeeId(null);
+    }
+  };
+
+  const createServiceFee = async () => {
+    if (user?.role !== "Admin") {
+      setError("Only admins can create service fees.");
+      return;
+    }
+
+    if (!feeEditorForm) {
+      setError("Fee editor is not initialized.");
+      return;
+    }
+
+    if (!feeEditorForm.serviceType.trim()) {
+      setError("Service type is required.");
+      return;
+    }
+
+    const parsedFeeValue = Number(feeEditorForm.feeValue);
+    if (!Number.isFinite(parsedFeeValue) || parsedFeeValue < 0) {
+      setError("Please provide a valid non-negative fee value.");
+      return;
+    }
+
+    const hasBracketMin = feeEditorForm.bracketMinAmount.trim() !== "";
+    const hasBracketMax = feeEditorForm.bracketMaxAmount.trim() !== "";
+    const parsedBracketMin = hasBracketMin
+      ? Number(feeEditorForm.bracketMinAmount)
+      : undefined;
+    const parsedBracketMax = hasBracketMax
+      ? Number(feeEditorForm.bracketMaxAmount)
+      : undefined;
+
+    if (
+      (hasBracketMin &&
+        (!Number.isFinite(parsedBracketMin) || (parsedBracketMin ?? 0) < 0)) ||
+      (hasBracketMax &&
+        (!Number.isFinite(parsedBracketMax) || (parsedBracketMax ?? 0) < 0))
+    ) {
+      setError("Bracket values must be valid non-negative numbers.");
+      return;
+    }
+
+    if (
+      parsedBracketMin !== undefined &&
+      parsedBracketMax !== undefined &&
+      parsedBracketMin > parsedBracketMax
+    ) {
+      setError("Bracket min amount cannot be greater than bracket max amount.");
+      return;
+    }
+
+    try {
+      setIsCreatingFee(true);
+      await settingsService.createServiceFee({
+        serviceType: feeEditorForm.serviceType.trim(),
+        providerType: feeEditorForm.providerType.trim() || undefined,
+        methodType: feeEditorForm.methodType.trim() || undefined,
+        feePercentage:
+          feeEditorForm.feeMode === "percentage" ? parsedFeeValue : undefined,
+        flatFee: feeEditorForm.feeMode === "flat" ? parsedFeeValue : undefined,
+        bracketMinAmount: parsedBracketMin,
+        bracketMaxAmount: parsedBracketMax,
+      });
+
+      await loadServiceFees();
+      setSuccess("Service fee rule created successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+      cancelEditServiceFee();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create service fee rule",
+      );
+    } finally {
+      setIsCreatingFee(false);
+    }
+  };
+
+  const handleDeleteServiceFee = async (fee: ServiceFee) => {
+    if (user?.role !== "Admin") {
+      setError("Only admins can delete service fees.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete fee rule for ${fee.serviceType}${fee.providerType ? ` (${fee.providerType})` : ""}${fee.methodType ? ` - ${fee.methodType}` : ""}?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingFeeId(fee.id);
+      await settingsService.deleteServiceFee(fee.id);
+      await loadServiceFees();
+      setSuccess("Service fee rule deleted successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+      if (editingFeeId === fee.id) {
+        cancelEditServiceFee();
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete service fee rule",
+      );
+    } finally {
+      setDeletingFeeId(null);
     }
   };
 
@@ -306,64 +686,566 @@ export const SettingsPage: React.FC = () => {
       {/* Service Fees */}
       {activeTab === "fees" && (
         <Card title="Service Fees Configuration">
-          {loading ? (
-            <div className="text-center py-8">Loading service fees...</div>
+          {loading || isServiceFeeMutating ? (
+            <div className="space-y-4">
+              {user?.role === "Admin" && (
+                <div className="flex justify-end">
+                  <Skeleton className="h-9 w-28 rounded-lg" />
+                </div>
+              )}
+              <SettingsTableSkeleton columns={4} rows={5} />
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                      Service
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                      Provider/Type
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                      Fee
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {serviceFees.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="text-center py-8 text-gray-500 dark:text-gray-400"
-                      >
-                        No service fees configured
-                      </td>
-                    </tr>
-                  ) : (
-                    serviceFees.map((fee) => (
-                      <tr
-                        key={fee.id}
-                        className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                      >
-                        <td className="py-3 px-4 text-gray-900 dark:text-white">
-                          {fee.serviceType}
-                        </td>
-                        <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                          {fee.providerType || fee.methodType || "-"}
-                        </td>
-                        <td className="py-3 px-4 text-gray-900 dark:text-white">
-                          {fee.feePercentage
-                            ? `${fee.feePercentage}%`
-                            : `₱${fee.flatFee?.toFixed(2)}`}
-                        </td>
-                        <td className="py-3 px-4">
-                          <Button variant="secondary" size="sm">
-                            Edit
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {user?.role === "Admin" &&
+                !isAddingFee &&
+                editingFeeId === null && (
+                  <div className="flex justify-end">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={beginAddServiceFee}
+                    >
+                      Add Fee Rule
+                    </Button>
+                  </div>
+                )}
+              {serviceFees.length === 0 && !isAddingFee ? (
+                <div className="rounded-lg border border-dashed border-gray-300 py-8 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                  No service fees configured
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {serviceFeeSections.map(([serviceType, groupedFees]) => (
+                    <div
+                      key={serviceType}
+                      className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700"
+                    >
+                      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/80">
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-200">
+                          {serviceType}
+                        </h3>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-gray-200 dark:border-gray-700">
+                              <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                Service
+                              </th>
+                              <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                Provider/Type
+                              </th>
+                              <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                Fee
+                              </th>
+                              <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {isAddingFee &&
+                              feeEditorForm &&
+                              feeEditorForm.serviceType === serviceType && (
+                                <tr className="border-b border-blue-100 bg-blue-50/40 dark:border-blue-800 dark:bg-blue-900/10">
+                                  <td className="py-3 px-4 text-gray-900 dark:text-white">
+                                    <select
+                                      value={feeEditorForm.serviceType}
+                                      onChange={(e) =>
+                                        updateFeeEditorForm({
+                                          serviceType: e.target.value,
+                                        })
+                                      }
+                                      aria-label="New service type"
+                                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    >
+                                      {getKnownOptions(
+                                        feeEditorForm.serviceType,
+                                        KNOWN_SERVICE_TYPES,
+                                      ).map((option) => (
+                                        <option key={option} value={option}>
+                                          {option}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
+                                    <div className="space-y-2">
+                                      {feeEditorForm.serviceType ===
+                                      "EWallet" ? (
+                                        <>
+                                          <select
+                                            value={feeEditorForm.providerType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                providerType: e.target.value,
+                                              })
+                                            }
+                                            aria-label="New provider"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          >
+                                            {getKnownOptions(
+                                              feeEditorForm.providerType,
+                                              KNOWN_EWALLET_PROVIDERS,
+                                            ).map((option) => (
+                                              <option
+                                                key={option}
+                                                value={option}
+                                              >
+                                                {option}
+                                              </option>
+                                            ))}
+                                          </select>
+                                          <select
+                                            value={feeEditorForm.methodType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                methodType: e.target.value,
+                                              })
+                                            }
+                                            aria-label="New method"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          >
+                                            {getKnownOptions(
+                                              feeEditorForm.methodType,
+                                              KNOWN_EWALLET_METHODS,
+                                            ).map((option) => (
+                                              <option
+                                                key={option}
+                                                value={option}
+                                              >
+                                                {option}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </>
+                                      ) : feeEditorForm.serviceType ===
+                                        "Printing" ? (
+                                        <select
+                                          value={feeEditorForm.providerType}
+                                          onChange={(e) =>
+                                            updateFeeEditorForm({
+                                              providerType: e.target.value,
+                                            })
+                                          }
+                                          aria-label="New printing type"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        >
+                                          {getKnownOptions(
+                                            feeEditorForm.providerType,
+                                            KNOWN_PRINTING_TYPES,
+                                          ).map((option) => (
+                                            <option key={option} value={option}>
+                                              {option}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <>
+                                          <input
+                                            type="text"
+                                            value={feeEditorForm.providerType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                providerType: e.target.value,
+                                              })
+                                            }
+                                            placeholder="Provider (optional)"
+                                            aria-label="New provider"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={feeEditorForm.methodType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                methodType: e.target.value,
+                                              })
+                                            }
+                                            placeholder="Method (optional)"
+                                            aria-label="New method"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          />
+                                        </>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-gray-900 dark:text-white">
+                                    <div className="space-y-2">
+                                      <div className="flex gap-2">
+                                        <select
+                                          value={feeEditorForm.feeMode}
+                                          onChange={(e) =>
+                                            updateFeeEditorForm({
+                                              feeMode: e.target.value as
+                                                | "flat"
+                                                | "percentage",
+                                            })
+                                          }
+                                          aria-label="New fee mode"
+                                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        >
+                                          <option value="flat">
+                                            Flat Fee (₱)
+                                          </option>
+                                          <option value="percentage">
+                                            Percentage (%)
+                                          </option>
+                                        </select>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={feeEditorForm.feeValue}
+                                          onChange={(e) =>
+                                            updateFeeEditorForm({
+                                              feeValue: e.target.value,
+                                            })
+                                          }
+                                          placeholder="Fee value"
+                                          aria-label="New fee value"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={feeEditorForm.bracketMinAmount}
+                                          onChange={(e) =>
+                                            updateFeeEditorForm({
+                                              bracketMinAmount: e.target.value,
+                                            })
+                                          }
+                                          placeholder="Bracket min"
+                                          aria-label="New bracket min"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={feeEditorForm.bracketMaxAmount}
+                                          onChange={(e) =>
+                                            updateFeeEditorForm({
+                                              bracketMaxAmount: e.target.value,
+                                            })
+                                          }
+                                          placeholder="Bracket max (blank = up)"
+                                          aria-label="New bracket max"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={createServiceFee}
+                                        loading={isCreatingFee}
+                                      >
+                                        Save
+                                      </Button>
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={cancelEditServiceFee}
+                                        disabled={isCreatingFee}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            {groupedFees.map((fee) => (
+                              <tr
+                                key={fee.id}
+                                className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                              >
+                                <td className="py-3 px-4 text-gray-900 dark:text-white">
+                                  {editingFeeId === fee.id && feeEditorForm ? (
+                                    <select
+                                      value={feeEditorForm.serviceType}
+                                      onChange={(e) =>
+                                        updateFeeEditorForm({
+                                          serviceType: e.target.value,
+                                        })
+                                      }
+                                      aria-label="Service type"
+                                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    >
+                                      {getKnownOptions(
+                                        feeEditorForm.serviceType,
+                                        KNOWN_SERVICE_TYPES,
+                                      ).map((option) => (
+                                        <option key={option} value={option}>
+                                          {option}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    fee.serviceType
+                                  )}
+                                </td>
+                                <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
+                                  {editingFeeId === fee.id && feeEditorForm ? (
+                                    <div className="space-y-2">
+                                      {feeEditorForm.serviceType ===
+                                      "EWallet" ? (
+                                        <>
+                                          <select
+                                            value={feeEditorForm.providerType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                providerType: e.target.value,
+                                              })
+                                            }
+                                            aria-label="Provider"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          >
+                                            {getKnownOptions(
+                                              feeEditorForm.providerType,
+                                              KNOWN_EWALLET_PROVIDERS,
+                                            ).map((option) => (
+                                              <option
+                                                key={option}
+                                                value={option}
+                                              >
+                                                {option}
+                                              </option>
+                                            ))}
+                                          </select>
+                                          <select
+                                            value={feeEditorForm.methodType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                methodType: e.target.value,
+                                              })
+                                            }
+                                            aria-label="Method"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          >
+                                            {getKnownOptions(
+                                              feeEditorForm.methodType,
+                                              KNOWN_EWALLET_METHODS,
+                                            ).map((option) => (
+                                              <option
+                                                key={option}
+                                                value={option}
+                                              >
+                                                {option}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </>
+                                      ) : feeEditorForm.serviceType ===
+                                        "Printing" ? (
+                                        <select
+                                          value={feeEditorForm.providerType}
+                                          onChange={(e) =>
+                                            updateFeeEditorForm({
+                                              providerType: e.target.value,
+                                            })
+                                          }
+                                          aria-label="Printing type"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        >
+                                          {getKnownOptions(
+                                            feeEditorForm.providerType,
+                                            KNOWN_PRINTING_TYPES,
+                                          ).map((option) => (
+                                            <option key={option} value={option}>
+                                              {option}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <>
+                                          <input
+                                            type="text"
+                                            value={feeEditorForm.providerType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                providerType: e.target.value,
+                                              })
+                                            }
+                                            placeholder="Provider (optional)"
+                                            aria-label="Provider"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={feeEditorForm.methodType}
+                                            onChange={(e) =>
+                                              updateFeeEditorForm({
+                                                methodType: e.target.value,
+                                              })
+                                            }
+                                            placeholder="Method (optional)"
+                                            aria-label="Method"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                          />
+                                        </>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    [fee.providerType, fee.methodType]
+                                      .filter(Boolean)
+                                      .join(" / ") || "-"
+                                  )}
+                                </td>
+                                <td className="py-3 px-4 text-gray-900 dark:text-white">
+                                  {editingFeeId === fee.id && feeEditorForm ? (
+                                    <div className="space-y-2">
+                                      <div className="flex gap-2">
+                                        <select
+                                          value={feeEditorForm.feeMode}
+                                          onChange={(e) =>
+                                            setFeeEditorForm({
+                                              ...feeEditorForm,
+                                              feeMode: e.target.value as
+                                                | "flat"
+                                                | "percentage",
+                                            })
+                                          }
+                                          aria-label="Fee mode"
+                                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        >
+                                          <option value="flat">
+                                            Flat Fee (₱)
+                                          </option>
+                                          <option value="percentage">
+                                            Percentage (%)
+                                          </option>
+                                        </select>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={feeEditorForm.feeValue}
+                                          onChange={(e) =>
+                                            setFeeEditorForm({
+                                              ...feeEditorForm,
+                                              feeValue: e.target.value,
+                                            })
+                                          }
+                                          placeholder="Fee value"
+                                          aria-label="Fee value"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={feeEditorForm.bracketMinAmount}
+                                          onChange={(e) =>
+                                            setFeeEditorForm({
+                                              ...feeEditorForm,
+                                              bracketMinAmount: e.target.value,
+                                            })
+                                          }
+                                          placeholder="Bracket min"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={feeEditorForm.bracketMaxAmount}
+                                          onChange={(e) =>
+                                            setFeeEditorForm({
+                                              ...feeEditorForm,
+                                              bracketMaxAmount: e.target.value,
+                                            })
+                                          }
+                                          placeholder="Bracket max (blank = up)"
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      {fee.feePercentage !== undefined
+                                        ? `${fee.feePercentage}%`
+                                        : `₱${fee.flatFee?.toFixed(2)}`}
+                                      {(fee.bracketMinAmount ??
+                                        fee.bracketMaxAmount) !== undefined && (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                          Bracket: ₱{fee.bracketMinAmount ?? 0}{" "}
+                                          - ₱{fee.bracketMaxAmount ?? "up"}
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  {user?.role === "Admin" ? (
+                                    editingFeeId === fee.id ? (
+                                      <div className="flex gap-2">
+                                        <Button
+                                          variant="primary"
+                                          size="sm"
+                                          onClick={() =>
+                                            saveServiceFeeEdit(fee)
+                                          }
+                                          loading={savingFeeId === fee.id}
+                                        >
+                                          Save
+                                        </Button>
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={cancelEditServiceFee}
+                                          disabled={savingFeeId === fee.id}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <div className="flex gap-2">
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={() =>
+                                            beginEditServiceFee(fee)
+                                          }
+                                        >
+                                          Edit Fee
+                                        </Button>
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleDeleteServiceFee(fee)
+                                          }
+                                          loading={deletingFeeId === fee.id}
+                                        >
+                                          Delete
+                                        </Button>
+                                      </div>
+                                    )
+                                  ) : (
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                      View only
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </Card>
@@ -468,7 +1350,7 @@ export const SettingsPage: React.FC = () => {
           {/* Users List */}
           <Card title="User Management">
             {loading ? (
-              <div className="text-center py-8">Loading users...</div>
+              <SettingsTableSkeleton columns={4} rows={5} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">

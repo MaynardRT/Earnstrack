@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => {
   return {
     base: env.VITE_APP_BASE_PATH || "/",
     plugins: [react()],
+    build: {
+      rollupOptions: {
+        input: {
+          main: "index.html",
+        },
+      },
+    },
     server: {
       port: 5173,
       proxy: {

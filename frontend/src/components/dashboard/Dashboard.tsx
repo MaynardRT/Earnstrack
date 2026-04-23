@@ -4,6 +4,7 @@ import { Transaction, TransactionSummary } from "../../types";
 import { Card, StatCard } from "../common/Card";
 import { Alert } from "../common/Alert";
 import { Modal } from "../common/Modal";
+import { Skeleton } from "../common/Skeleton";
 import { resolveApiAssetUrl } from "../../services/api";
 import {
   Banknote,
@@ -12,18 +13,166 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Eye,
+  ArrowUpDown,
 } from "lucide-react";
+
+type SortKey =
+  | "userFullName"
+  | "transactionType"
+  | "amount"
+  | "serviceCharge"
+  | "totalAmount"
+  | "status"
+  | "createdAt";
+
+type SortDirection = "asc" | "desc";
+
+const DashboardLoadingSkeleton: React.FC = () => {
+  return (
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-8">
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-56" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="text-center space-y-3">
+              <div className="flex justify-center">
+                <Skeleton className="h-10 w-10 rounded-full" />
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-8 w-28" />
+              </div>
+            </Card>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-10 w-24 rounded-lg" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="space-y-3">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-4 w-28" />
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-60" />
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <th key={index} className="px-4 py-3">
+                      <Skeleton className="h-4 w-20" />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 6 }).map((_, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className="border-b border-gray-100 dark:border-gray-700"
+                  >
+                    {Array.from({ length: 8 }).map((_, columnIndex) => (
+                      <td key={columnIndex} className="px-4 py-4">
+                        <Skeleton className="h-4 w-full max-w-[9rem]" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const DashboardSummarySkeleton: React.FC = () => {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={index} className="text-center space-y-3">
+            <div className="flex justify-center">
+              <Skeleton className="h-10 w-10 rounded-full" />
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-8 w-28" />
+            </div>
+          </Card>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={index} className="space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-4 w-28" />
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const DashboardTransactionsSkeleton: React.FC = () => {
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-200 dark:border-gray-700">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <th key={index} className="px-4 py-3">
+                  <Skeleton className="h-4 w-20" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 6 }).map((_, rowIndex) => (
+              <tr
+                key={rowIndex}
+                className="border-b border-gray-100 dark:border-gray-700"
+              >
+                {Array.from({ length: 8 }).map((_, columnIndex) => (
+                  <td key={columnIndex} className="px-4 py-4">
+                    <Skeleton className="h-4 w-full max-w-[9rem]" />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+};
 
 export const Dashboard: React.FC = () => {
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [useEmbeddedScreenshotFallback, setUseEmbeddedScreenshotFallback] =
     useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   useEffect(() => {
     loadData();
@@ -31,7 +180,14 @@ export const Dashboard: React.FC = () => {
 
   const loadData = async () => {
     // Summary and table data are fetched together so the dashboard reflects one coherent snapshot per period change.
-    setLoading(true);
+    const shouldUseInitialSkeleton = summary === null;
+
+    if (shouldUseInitialSkeleton) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+
     setError(null);
 
     try {
@@ -48,21 +204,88 @@ export const Dashboard: React.FC = () => {
       );
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading...
-      </div>
-    );
+  if (loading) return <DashboardLoadingSkeleton />;
 
   const screenshotPreviewUrl = useEmbeddedScreenshotFallback
     ? resolveApiAssetUrl(selectedTransaction?.screenshotUrl)
     : selectedTransaction?.screenshotDataUrl ||
       resolveApiAssetUrl(selectedTransaction?.screenshotUrl);
   const screenshotFallbackUrl = selectedTransaction?.screenshotDataUrl || null;
+
+  const handleSort = (nextSortKey: SortKey) => {
+    if (sortKey === nextSortKey) {
+      setSortDirection((currentDirection) =>
+        currentDirection === "asc" ? "desc" : "asc",
+      );
+      return;
+    }
+
+    setSortKey(nextSortKey);
+    setSortDirection(nextSortKey === "createdAt" ? "desc" : "asc");
+  };
+
+  const getComparableValue = (transaction: Transaction, key: SortKey) => {
+    switch (key) {
+      case "userFullName":
+        return (transaction.userFullName || "Unknown user").toLowerCase();
+      case "transactionType":
+        return transaction.transactionType.toLowerCase();
+      case "amount":
+        return transaction.amount;
+      case "serviceCharge":
+        return transaction.serviceCharge;
+      case "totalAmount":
+        return transaction.totalAmount;
+      case "status":
+        return transaction.status.toLowerCase();
+      case "createdAt":
+        return new Date(transaction.createdAt).getTime();
+    }
+  };
+
+  const sortedTransactions = [...transactions].sort((left, right) => {
+    const leftValue = getComparableValue(left, sortKey);
+    const rightValue = getComparableValue(right, sortKey);
+
+    if (leftValue < rightValue) {
+      return sortDirection === "asc" ? -1 : 1;
+    }
+
+    if (leftValue > rightValue) {
+      return sortDirection === "asc" ? 1 : -1;
+    }
+
+    return 0;
+  });
+
+  const renderSortableHeader = (label: string, key: SortKey) => {
+    const isActive = sortKey === key;
+    const indicator = isActive ? (sortDirection === "asc" ? "↑" : "↓") : "";
+
+    return (
+      <button
+        type="button"
+        onClick={() => handleSort(key)}
+        className="inline-flex items-center gap-2 font-semibold text-gray-900 transition-colors hover:text-blue-600 dark:text-white dark:hover:text-blue-300"
+      >
+        <span>{label}</span>
+        {isActive ? (
+          <span className="text-xs text-blue-600 dark:text-blue-300">
+            {indicator}
+          </span>
+        ) : (
+          <ArrowUpDown size={14} className="text-gray-400 dark:text-gray-500" />
+        )}
+      </button>
+    );
+  };
+
+  const getSortColumnClassName = (key: SortKey) =>
+    sortKey === key ? "bg-blue-50/70 dark:bg-blue-900/10" : "";
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
@@ -74,23 +297,71 @@ export const Dashboard: React.FC = () => {
           Earnings Summary
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <StatCard
-            label="Daily"
-            value={summary?.dailyTotal || 0}
-            icon={<Banknote size={24} className="text-blue-600" />}
-          />
-          <StatCard
-            label="Weekly"
-            value={summary?.weeklyTotal || 0}
-            icon={<TrendingUp size={24} className="text-green-600" />}
-          />
-          <StatCard
-            label="Monthly"
-            value={summary?.monthlyTotal || 0}
-            icon={<Calendar size={24} className="text-purple-600" />}
-          />
-        </div>
+        {isRefreshing ? (
+          <DashboardSummarySkeleton />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <StatCard
+                label="Daily"
+                value={summary?.dailyTotal || 0}
+                icon={<Banknote size={24} className="text-blue-600" />}
+              />
+              <StatCard
+                label="Weekly"
+                value={summary?.weeklyTotal || 0}
+                icon={<TrendingUp size={24} className="text-green-600" />}
+              />
+              <StatCard
+                label="Monthly"
+                value={summary?.monthlyTotal || 0}
+                icon={<Calendar size={24} className="text-purple-600" />}
+              />
+            </div>
+
+            {summary?.statusBreakdown && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Status cards make non-completed work visible without forcing the operator into the raw table first. */}
+                <Card>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    Pending Transactions
+                  </p>
+                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                    {summary.statusBreakdown.pendingTransactions}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Total earnings: ₱
+                    {summary.statusBreakdown.pendingTotal.toFixed(2)}
+                  </p>
+                </Card>
+                <Card>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    Completed Transactions
+                  </p>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    {summary.statusBreakdown.completedTransactions}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Total earnings: ₱
+                    {summary.statusBreakdown.completedTotal.toFixed(2)}
+                  </p>
+                </Card>
+                <Card>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    Failed Transactions
+                  </p>
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                    {summary.statusBreakdown.failedTransactions}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Total earnings: ₱
+                    {summary.statusBreakdown.failedTotal.toFixed(2)}
+                  </p>
+                </Card>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Period Filter */}
         <div className="flex gap-2 mb-4">
@@ -98,6 +369,7 @@ export const Dashboard: React.FC = () => {
             <button
               key={p}
               onClick={() => setPeriod(p)}
+              disabled={isRefreshing}
               className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
                 period === p
                   ? "bg-blue-600 text-white"
@@ -108,46 +380,6 @@ export const Dashboard: React.FC = () => {
             </button>
           ))}
         </div>
-
-        {summary?.statusBreakdown && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Status cards make non-completed work visible without forcing the operator into the raw table first. */}
-            <Card>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Pending Transactions
-              </p>
-              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                {summary.statusBreakdown.pendingTransactions}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Total amount: ₱{summary.statusBreakdown.pendingTotal.toFixed(2)}
-              </p>
-            </Card>
-            <Card>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Completed Transactions
-              </p>
-              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                {summary.statusBreakdown.completedTransactions}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Total amount: ₱
-                {summary.statusBreakdown.completedTotal.toFixed(2)}
-              </p>
-            </Card>
-            <Card>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Failed Transactions
-              </p>
-              <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                {summary.statusBreakdown.failedTransactions}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Total amount: ₱{summary.statusBreakdown.failedTotal.toFixed(2)}
-              </p>
-            </Card>
-          </div>
-        )}
       </div>
 
       {/* Recent Transactions */}
@@ -156,140 +388,172 @@ export const Dashboard: React.FC = () => {
           Recent Transactions
         </h2>
 
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Recorded By
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Type
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Amount
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Service Charge
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Total
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Details
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                    Date & Time
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="text-center py-8 text-gray-500 dark:text-gray-400"
+        {isRefreshing ? (
+          <DashboardTransactionsSkeleton />
+        ) : (
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th
+                      className={`text-left py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("userFullName")}`}
                     >
-                      No transactions yet
-                    </td>
+                      {renderSortableHeader("Recorded By", "userFullName")}
+                    </th>
+                    <th
+                      className={`text-left py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("transactionType")}`}
+                    >
+                      {renderSortableHeader("Type", "transactionType")}
+                    </th>
+                    <th
+                      className={`text-left py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("amount")}`}
+                    >
+                      {renderSortableHeader("Amount", "amount")}
+                    </th>
+                    <th
+                      className={`text-left py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("serviceCharge")}`}
+                    >
+                      {renderSortableHeader("Service Charge", "serviceCharge")}
+                    </th>
+                    <th
+                      className={`text-left py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("totalAmount")}`}
+                    >
+                      {renderSortableHeader("Total", "totalAmount")}
+                    </th>
+                    <th
+                      className={`text-left py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("status")}`}
+                    >
+                      {renderSortableHeader("Status", "status")}
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                      Details
+                    </th>
+                    <th
+                      className={`text-left py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("createdAt")}`}
+                    >
+                      {renderSortableHeader("Date & Time", "createdAt")}
+                    </th>
                   </tr>
-                ) : (
-                  transactions.map((transaction) => (
-                    <tr
-                      key={transaction.id}
-                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                    >
-                      <td className="py-3 px-4 text-gray-900 dark:text-white">
-                        {transaction.userFullName || "Unknown user"}
+                </thead>
+                <tbody>
+                  {transactions.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="text-center py-8 text-gray-500 dark:text-gray-400"
+                      >
+                        No transactions yet
                       </td>
-                      <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1">
-                          {transaction.transactionType === "EWallet" ? (
-                            <ArrowUpRight
-                              size={16}
-                              className="text-green-600"
-                            />
-                          ) : (
-                            <ArrowDownLeft
-                              size={16}
-                              className="text-blue-600"
-                            />
-                          )}
-                          {transaction.transactionType}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-white">
-                        ₱{transaction.amount.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-white">
-                        ₱{transaction.serviceCharge.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                        ₱{transaction.totalAmount.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex flex-col gap-1">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium w-fit ${
-                              transaction.status === "Completed"
-                                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                                : transaction.status === "Pending"
-                                  ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200"
-                                  : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
-                            }`}
-                          >
-                            {transaction.status}
-                          </span>
-                          {transaction.failureReason && (
-                            <span className="text-xs text-red-600 dark:text-red-300 max-w-xs">
-                              {transaction.failureReason}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUseEmbeddedScreenshotFallback(false);
-                            setSelectedTransaction(transaction);
-                          }}
-                          className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-500/10"
+                    </tr>
+                  ) : (
+                    sortedTransactions.map((transaction) => (
+                      <tr
+                        key={transaction.id}
+                        className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      >
+                        <td
+                          className={`py-3 px-4 text-gray-900 dark:text-white ${getSortColumnClassName("userFullName")}`}
                         >
-                          <Eye size={16} />
-                          View details
-                        </button>
-                      </td>
-                      <td className="py-3 px-4 text-gray-600 dark:text-gray-400 text-sm">
-                        <div className="flex flex-col leading-tight">
-                          <span>
-                            {new Date(
-                              transaction.createdAt,
-                            ).toLocaleDateString()}
+                          {transaction.userFullName || "Unknown user"}
+                        </td>
+                        <td
+                          className={`py-3 px-4 ${getSortColumnClassName("transactionType")}`}
+                        >
+                          <span className="inline-flex items-center gap-1">
+                            {transaction.transactionType === "EWallet" &&
+                            transaction.method === "CashOut" ? (
+                              <ArrowDownLeft
+                                size={16}
+                                className="text-blue-600"
+                              />
+                            ) : (
+                              <ArrowUpRight
+                                size={16}
+                                className="text-green-600"
+                              />
+                            )}
+                            {transaction.transactionType}
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-500">
-                            {new Date(transaction.createdAt).toLocaleTimeString(
-                              [],
-                              {
+                        </td>
+                        <td
+                          className={`py-3 px-4 text-gray-900 dark:text-white ${getSortColumnClassName("amount")}`}
+                        >
+                          ₱{transaction.amount.toFixed(2)}
+                        </td>
+                        <td
+                          className={`py-3 px-4 text-gray-900 dark:text-white ${getSortColumnClassName("serviceCharge")}`}
+                        >
+                          ₱{transaction.serviceCharge.toFixed(2)}
+                        </td>
+                        <td
+                          className={`py-3 px-4 font-semibold text-gray-900 dark:text-white ${getSortColumnClassName("totalAmount")}`}
+                        >
+                          ₱{transaction.totalAmount.toFixed(2)}
+                        </td>
+                        <td
+                          className={`py-3 px-4 ${getSortColumnClassName("status")}`}
+                        >
+                          <div className="flex flex-col gap-1">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full text-xs font-medium w-fit ${
+                                transaction.status === "Completed"
+                                  ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                                  : transaction.status === "Pending"
+                                    ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200"
+                                    : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                              }`}
+                            >
+                              {transaction.status}
+                            </span>
+                            {transaction.failureReason && (
+                              <span className="text-xs text-red-600 dark:text-red-300 max-w-xs">
+                                {transaction.failureReason}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUseEmbeddedScreenshotFallback(false);
+                              setSelectedTransaction(transaction);
+                            }}
+                            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-300 dark:hover:bg-blue-500/10"
+                          >
+                            <Eye size={16} />
+                            View details
+                          </button>
+                        </td>
+                        <td
+                          className={`py-3 px-4 text-gray-600 dark:text-gray-400 text-sm ${getSortColumnClassName("createdAt")}`}
+                        >
+                          <div className="flex flex-col leading-tight">
+                            <span>
+                              {new Date(
+                                transaction.createdAt,
+                              ).toLocaleDateString()}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-500">
+                              {new Date(
+                                transaction.createdAt,
+                              ).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
                                 second: "2-digit",
-                              },
-                            )}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                              })}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
       </div>
 
       <Modal

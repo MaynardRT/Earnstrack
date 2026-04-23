@@ -8,7 +8,6 @@ import {
   calculateEWalletServiceCharge,
   calculateEWalletTotal,
   getEWalletAmountBracket,
-  getEWalletServiceChargeRate,
 } from "../../utils/transactionCalculations";
 
 export const EWalletForm: React.FC = () => {
@@ -104,7 +103,6 @@ export const EWalletForm: React.FC = () => {
     }
   };
 
-  const serviceChargeRate = getEWalletServiceChargeRate(formData.baseAmount);
   const serviceCharge = calculateEWalletServiceCharge(formData.baseAmount);
   const totalAmount = calculateEWalletTotal(formData.baseAmount);
 
@@ -203,14 +201,29 @@ export const EWalletForm: React.FC = () => {
               required
             >
               <option value="">Select bracket</option>
-              <option value="100-500">₱0 - ₱500</option>
-              <option value="501-1000">₱501 - ₱1,000</option>
-              <option value="1001-2000">₱1,001 - ₱2,000</option>
-              <option value="2001-3000">₱2,001 - ₱3,000</option>
+              <option value="0-500">₱0 - ₱500</option>
+              <option value="501-1500">₱501 - ₱1,500</option>
+              <option value="1501-2500">₱1,501 - ₱2,500</option>
+              <option value="2501-3000">₱2,501 - ₱3,000</option>
               <option value="3001-4000">₱3,001 - ₱4,000</option>
               <option value="4001-5000">₱4,001 - ₱5,000</option>
-              <option value="5000+">₱5,000+ (5% service charge)</option>
+              <option value="5001+">
+                ₱5,001+ (add ₱50 per ₱1,000 band above ₱3,000)
+              </option>
             </select>
+          </div>
+
+          <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+            <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">
+              Service Fee Guide
+            </p>
+            <ul className="text-sm text-blue-900 dark:text-blue-200 space-y-1">
+              <li>₱0 - ₱500: ₱5.00</li>
+              <li>₱501 - ₱1,500: ₱10.00</li>
+              <li>₱1,501 - ₱2,500: ₱15.00</li>
+              <li>₱2,501 - ₱3,000: ₱20.00</li>
+              <li>₱3,001 and up: add ₱50 per ₱1,000 band above ₱3,000</li>
+            </ul>
           </div>
 
           {/* Reference Number */}
@@ -293,8 +306,7 @@ export const EWalletForm: React.FC = () => {
               required
             />
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Service Charge ({serviceChargeRate * 100}%): ₱
-              {serviceCharge.toFixed(2)}
+              Service Charge (tiered): ₱{serviceCharge.toFixed(2)}
             </p>
           </div>
 
