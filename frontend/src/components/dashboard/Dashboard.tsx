@@ -364,7 +364,7 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* Period Filter */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 mt-6">
           {(["daily", "weekly", "monthly"] as const).map((p) => (
             <button
               key={p}
