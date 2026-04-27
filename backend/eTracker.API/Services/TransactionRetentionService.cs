@@ -33,6 +33,8 @@ public class TransactionRetentionService : ITransactionRetentionService
             var expiredTransactions = await _context.Transactions
                 .Include(t => t.EWalletTransaction)
                 .Include(t => t.PrintingTransaction)
+                .Include(t => t.ELoadingTransaction)
+                .Include(t => t.BillsPaymentTransaction)
                 .Where(t => t.CreatedAt < cutoffDate)
                 .OrderBy(t => t.CreatedAt)
                 .Take(ArchiveBatchSize)
@@ -57,6 +59,16 @@ public class TransactionRetentionService : ITransactionRetentionService
                 .Select(t => t.PrintingTransaction!)
                 .ToList();
 
+            var eLoadingTransactions = expiredTransactions
+                .Where(t => t.ELoadingTransaction != null)
+                .Select(t => t.ELoadingTransaction!)
+                .ToList();
+
+            var billsPaymentTransactions = expiredTransactions
+                .Where(t => t.BillsPaymentTransaction != null)
+                .Select(t => t.BillsPaymentTransaction!)
+                .ToList();
+
             _context.DeletedTransactions.AddRange(deletedTransactions);
 
             if (eWalletTransactions.Count > 0)
@@ -67,6 +79,16 @@ public class TransactionRetentionService : ITransactionRetentionService
             if (printingTransactions.Count > 0)
             {
                 _context.PrintingTransactions.RemoveRange(printingTransactions);
+            }
+
+            if (eLoadingTransactions.Count > 0)
+            {
+                _context.ELoadingTransactions.RemoveRange(eLoadingTransactions);
+            }
+
+            if (billsPaymentTransactions.Count > 0)
+            {
+                _context.BillsPaymentTransactions.RemoveRange(billsPaymentTransactions);
             }
 
             _context.Transactions.RemoveRange(expiredTransactions);
@@ -112,7 +134,12 @@ public class TransactionRetentionService : ITransactionRetentionService
             PaperSize = transaction.PrintingTransaction?.PaperSize,
             Color = transaction.PrintingTransaction?.Color,
             PrintingBaseAmount = transaction.PrintingTransaction?.BaseAmount,
-            Quantity = transaction.PrintingTransaction?.Quantity
+            Quantity = transaction.PrintingTransaction?.Quantity,
+            ELoadingNetwork = transaction.ELoadingTransaction?.MobileNetwork,
+            ELoadingPhoneNumber = transaction.ELoadingTransaction?.PhoneNumber,
+            ELoadingBaseAmount = transaction.ELoadingTransaction?.BaseAmount,
+            BillerType = transaction.BillsPaymentTransaction?.BillerType,
+            BillAmount = transaction.BillsPaymentTransaction?.BillAmount
         };
     }
 }

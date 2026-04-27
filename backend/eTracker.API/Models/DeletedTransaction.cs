@@ -27,4 +27,11 @@ public class DeletedTransaction
     public string? Color { get; set; }
     public decimal? PrintingBaseAmount { get; set; }
     public int? Quantity { get; set; }
+    // E-Loading archive fields
+    public string? ELoadingNetwork { get; set; }
+    public string? ELoadingPhoneNumber { get; set; }
+    public decimal? ELoadingBaseAmount { get; set; }
+    // Bills Payment archive fields
+    public string? BillerType { get; set; }
+    public decimal? BillAmount { get; set; }
 }

@@ -18,7 +18,10 @@ public static class DatabaseInitializer
         "DeletedTransactions",
         "EWalletTransactions",
         "PrintingTransactions",
-        "ServiceFees"
+        "ServiceFees",
+        "ELoadingTransactions",
+        "BillsPaymentTransactions",
+        "Products"
     ];
 
     public static async Task InitializeAsync(IServiceProvider services)
@@ -36,6 +39,8 @@ public static class DatabaseInitializer
         await EnsureReceiptStorageColumnsAsync(dbContext, logger);
 
         await SeedAdminUserAsync(scope.ServiceProvider, configuration, dbContext, logger);
+        await SeedDefaultServiceFeesAsync(dbContext, logger);
+        await SeedDefaultProductsAsync(dbContext, logger);
     }
 
     private static async Task EnsureMigrationHistoryForExistingSchemaAsync(ApplicationDbContext dbContext, ILogger logger)
@@ -300,5 +305,58 @@ public static class DatabaseInitializer
 
         await dbContext.SaveChangesAsync();
         logger.LogInformation("Bootstrapped initial admin account for {AdminEmail}.", adminEmail);
+    }
+
+    private static async Task SeedDefaultServiceFeesAsync(ApplicationDbContext dbContext, ILogger logger)
+    {
+        var hasELoadingFees = await dbContext.ServiceFees.AnyAsync(f => f.ServiceType == "ELoading");
+        if (!hasELoadingFees)
+        {
+            // Default 5 peso flat fee for all standard mobile networks; SurftoSawa charges 25 pesos.
+            var eLoadingFees = new[]
+            {
+                new ServiceFee { Id = Guid.NewGuid(), ServiceType = "ELoading", ProviderType = null, FlatFee = 5m, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
+                new ServiceFee { Id = Guid.NewGuid(), ServiceType = "ELoading", ProviderType = "SurftoSawa", FlatFee = 25m, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+            };
+            dbContext.ServiceFees.AddRange(eLoadingFees);
+            logger.LogInformation("Seeded default E-Loading service fees.");
+        }
+
+        var hasBillsFees = await dbContext.ServiceFees.AnyAsync(f => f.ServiceType == "BillsPayment");
+        if (!hasBillsFees)
+        {
+            dbContext.ServiceFees.Add(new ServiceFee
+            {
+                Id = Guid.NewGuid(),
+                ServiceType = "BillsPayment",
+                ProviderType = null,
+                FlatFee = 25m,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+            logger.LogInformation("Seeded default Bills Payment service fee.");
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedDefaultProductsAsync(ApplicationDbContext dbContext, ILogger logger)
+    {
+        var hasProducts = await dbContext.Products.AnyAsync();
+        if (!hasProducts)
+        {
+            dbContext.Products.Add(new Product
+            {
+                Id = Guid.NewGuid(),
+                Name = "Ice Pop",
+                Price = 5m,
+                StockCount = 0,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("Seeded default product: Ice Pop.");
+        }
     }
 }

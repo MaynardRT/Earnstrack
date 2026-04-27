@@ -15,7 +15,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<DeletedTransaction> DeletedTransactions { get; set; }
     public DbSet<EWalletTransaction> EWalletTransactions { get; set; }
     public DbSet<PrintingTransaction> PrintingTransactions { get; set; }
+    public DbSet<ELoadingTransaction> ELoadingTransactions { get; set; }
+    public DbSet<BillsPaymentTransaction> BillsPaymentTransactions { get; set; }
     public DbSet<ServiceFee> ServiceFees { get; set; }
+    public DbSet<Product> Products { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -172,6 +175,41 @@ public class ApplicationDbContext : DbContext
             .WithOne(p => p.Transaction)
             .HasForeignKey<PrintingTransaction>(p => p.TransactionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.ELoadingTransaction)
+            .WithOne(e => e.Transaction)
+            .HasForeignKey<ELoadingTransaction>(e => e.TransactionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.BillsPaymentTransaction)
+            .WithOne(b => b.Transaction)
+            .HasForeignKey<BillsPaymentTransaction>(b => b.TransactionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ELoadingTransaction>()
+            .Property(e => e.BaseAmount)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<BillsPaymentTransaction>()
+            .Property(b => b.BillAmount)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<Product>()
+            .HasKey(p => p.Id);
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Price)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<DeletedTransaction>()
+            .Property(t => t.ELoadingBaseAmount)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<DeletedTransaction>()
+            .Property(t => t.BillAmount)
+            .HasPrecision(10, 2);
 
         // Create indexes for performance
         modelBuilder.Entity<Transaction>()

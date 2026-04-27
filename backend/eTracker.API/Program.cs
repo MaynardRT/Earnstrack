@@ -68,6 +68,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ITransactionRetentionService, TransactionRetentionService>();
 builder.Services.AddScoped<IServiceFeeService, ServiceFeeService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IReceiptStorageService, LocalReceiptStorageService>();
 builder.Services.AddHostedService<TransactionRetentionHostedService>();
 builder.Services.AddHttpClient();

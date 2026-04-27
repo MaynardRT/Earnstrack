@@ -88,4 +88,32 @@ public class TransactionsController : ControllerBase
 
         return Ok(transaction);
     }
+
+    [HttpPost("eloading")]
+    public async Task<ActionResult<TransactionListDto>> CreateELoadingTransaction([FromBody] CreateELoadingTransactionDto request)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userId, out var userGuid))
+            return Unauthorized();
+
+        var transaction = await _transactionService.CreateELoadingTransaction(userGuid, request);
+        if (transaction == null)
+            return BadRequest("Failed to create transaction");
+
+        return Ok(transaction);
+    }
+
+    [HttpPost("bills-payment")]
+    public async Task<ActionResult<TransactionListDto>> CreateBillsPaymentTransaction([FromBody] CreateBillsPaymentTransactionDto request)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userId, out var userGuid))
+            return Unauthorized();
+
+        var transaction = await _transactionService.CreateBillsPaymentTransaction(userGuid, request);
+        if (transaction == null)
+            return BadRequest("Failed to create transaction");
+
+        return Ok(transaction);
+    }
 }

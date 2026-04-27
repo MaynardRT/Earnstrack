@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { settingsService } from "../../services/settingsService";
 import { transactionService } from "../../services/transactionService";
-import { ServiceFee, User } from "../../types";
+import { ServiceFee, User, Product, CreateProductDto } from "../../types";
 import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Alert } from "../common/Alert";
@@ -20,7 +20,12 @@ type FeeEditorForm = {
   bracketMaxAmount: string;
 };
 
-const KNOWN_SERVICE_TYPES = ["EWallet", "Printing"] as const;
+const KNOWN_SERVICE_TYPES = [
+  "EWallet",
+  "Printing",
+  "ELoading",
+  "BillsPayment",
+] as const;
 const KNOWN_EWALLET_PROVIDERS = ["GCash", "Maya"] as const;
 const KNOWN_EWALLET_METHODS = ["CashIn", "CashOut"] as const;
 const KNOWN_PRINTING_TYPES = ["Printing", "Scanning", "Photocopy"] as const;
@@ -72,12 +77,31 @@ export const SettingsPage: React.FC = () => {
   const { user, updateUser } = useAuthStore();
   const [serviceFees, setServiceFees] = useState<ServiceFee[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [activeTab, setActiveTab] = useState<"appearance" | "fees" | "users">(
-    "appearance",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "appearance" | "fees" | "users" | "products"
+  >("appearance");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Products state
+  const [products, setProducts] = useState<Product[]>([]);
+  const [newProductForm, setNewProductForm] = useState<CreateProductDto>({
+    name: "",
+    price: 0,
+    stockCount: 0,
+  });
+  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editProductForm, setEditProductForm] = useState<{
+    price: number;
+    stockCount: number;
+    isActive: boolean;
+  } | null>(null);
+  const [savingProductId, setSavingProductId] = useState<string | null>(null);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(
+    null,
+  );
 
   // User creation form state
   const [newUserForm, setNewUserForm] = useState({
@@ -149,6 +173,7 @@ export const SettingsPage: React.FC = () => {
   useEffect(() => {
     if (activeTab === "fees") loadServiceFees();
     if (activeTab === "users" && user?.role === "Admin") loadUsers();
+    if (activeTab === "products" && user?.role === "Admin") loadProducts();
   }, [activeTab, user?.role]);
 
   const loadServiceFees = async () => {
@@ -170,6 +195,18 @@ export const SettingsPage: React.FC = () => {
       setUsers(allUsers);
     } catch (err) {
       setError("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const allProducts = await settingsService.getProducts();
+      setProducts(allProducts);
+    } catch (err) {
+      setError("Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -612,6 +649,18 @@ export const SettingsPage: React.FC = () => {
             }`}
           >
             User Management
+          </button>
+        )}
+        {user?.role === "Admin" && (
+          <button
+            onClick={() => setActiveTab("products")}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === "products"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
+            }`}
+          >
+            Products
           </button>
         )}
       </div>
@@ -1426,6 +1475,307 @@ export const SettingsPage: React.FC = () => {
                         </tr>
                       ))
                     )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </>
+      )}
+
+      {/* Products Management */}
+      {activeTab === "products" && user?.role === "Admin" && (
+        <>
+          <Card title="Add New Product" className="mb-6">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newProductForm.name.trim() || newProductForm.price <= 0) {
+                  setError("Name and a valid price are required");
+                  return;
+                }
+                setIsCreatingProduct(true);
+                try {
+                  const created =
+                    await settingsService.createProduct(newProductForm);
+                  setProducts((prev) => [...prev, created]);
+                  setNewProductForm({ name: "", price: 0, stockCount: 0 });
+                  setSuccess("Product created successfully!");
+                  setTimeout(() => setSuccess(null), 3000);
+                } catch {
+                  setError("Failed to create product");
+                } finally {
+                  setIsCreatingProduct(false);
+                }
+              }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={newProductForm.name}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      name: e.target.value,
+                    })
+                  }
+                  placeholder="Product name"
+                  disabled={isCreatingProduct}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Price (₱)
+                </label>
+                <input
+                  type="number"
+                  value={newProductForm.price || ""}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      price: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  disabled={isCreatingProduct}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Stock Count
+                </label>
+                <input
+                  type="number"
+                  value={newProductForm.stockCount || ""}
+                  onChange={(e) =>
+                    setNewProductForm({
+                      ...newProductForm,
+                      stockCount: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  min="0"
+                  placeholder="0"
+                  disabled={isCreatingProduct}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="sm:col-span-3">
+                <Button type="submit" disabled={isCreatingProduct}>
+                  {isCreatingProduct ? "Adding..." : "Add Product"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+
+          <Card title="Products">
+            {loading ? (
+              <SettingsTableSkeleton columns={5} rows={3} />
+            ) : products.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                No products yet.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
+                      <th className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                        Price
+                      </th>
+                      <th className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                        Stock
+                      </th>
+                      <th className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {products.map((product) => (
+                      <tr key={product.id}>
+                        <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">
+                          {product.name}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                          {editingProductId === product.id &&
+                          editProductForm ? (
+                            <input
+                              type="number"
+                              value={editProductForm.price}
+                              onChange={(e) =>
+                                setEditProductForm({
+                                  ...editProductForm,
+                                  price: parseFloat(e.target.value) || 0,
+                                })
+                              }
+                              min="0.01"
+                              step="0.01"
+                              className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                          ) : (
+                            `₱${product.price.toFixed(2)}`
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                          {editingProductId === product.id &&
+                          editProductForm ? (
+                            <input
+                              type="number"
+                              value={editProductForm.stockCount}
+                              onChange={(e) =>
+                                setEditProductForm({
+                                  ...editProductForm,
+                                  stockCount: parseInt(e.target.value) || 0,
+                                })
+                              }
+                              min="0"
+                              className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                          ) : (
+                            product.stockCount
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {editingProductId === product.id &&
+                          editProductForm ? (
+                            <select
+                              value={
+                                editProductForm.isActive ? "active" : "inactive"
+                              }
+                              onChange={(e) =>
+                                setEditProductForm({
+                                  ...editProductForm,
+                                  isActive: e.target.value === "active",
+                                })
+                              }
+                              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            >
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                            </select>
+                          ) : (
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                product.isActive
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                              }`}
+                            >
+                              {product.isActive ? "Active" : "Inactive"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {editingProductId === product.id ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  disabled={savingProductId === product.id}
+                                  onClick={async () => {
+                                    if (!editProductForm) return;
+                                    setSavingProductId(product.id);
+                                    try {
+                                      const updated =
+                                        await settingsService.updateProduct(
+                                          product.id,
+                                          editProductForm,
+                                        );
+                                      setProducts((prev) =>
+                                        prev.map((p) =>
+                                          p.id === product.id ? updated : p,
+                                        ),
+                                      );
+                                      setEditingProductId(null);
+                                      setEditProductForm(null);
+                                      setSuccess("Product updated!");
+                                      setTimeout(() => setSuccess(null), 3000);
+                                    } catch {
+                                      setError("Failed to update product");
+                                    } finally {
+                                      setSavingProductId(null);
+                                    }
+                                  }}
+                                >
+                                  {savingProductId === product.id
+                                    ? "Saving..."
+                                    : "Save"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => {
+                                    setEditingProductId(null);
+                                    setEditProductForm(null);
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => {
+                                    setEditingProductId(product.id);
+                                    setEditProductForm({
+                                      price: product.price,
+                                      stockCount: product.stockCount,
+                                      isActive: product.isActive,
+                                    });
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="danger"
+                                  disabled={deletingProductId === product.id}
+                                  onClick={async () => {
+                                    if (!confirm(`Delete "${product.name}"?`))
+                                      return;
+                                    setDeletingProductId(product.id);
+                                    try {
+                                      await settingsService.deleteProduct(
+                                        product.id,
+                                      );
+                                      setProducts((prev) =>
+                                        prev.filter((p) => p.id !== product.id),
+                                      );
+                                    } catch {
+                                      setError("Failed to delete product");
+                                    } finally {
+                                      setDeletingProductId(null);
+                                    }
+                                  }}
+                                >
+                                  {deletingProductId === product.id
+                                    ? "Deleting..."
+                                    : "Delete"}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

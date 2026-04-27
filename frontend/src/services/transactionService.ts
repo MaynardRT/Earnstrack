@@ -4,6 +4,8 @@ import {
   TransactionSummary,
   EWalletTransaction,
   PrintingTransaction,
+  ELoadingTransaction,
+  BillsPaymentTransaction,
 } from "../types";
 
 export const transactionService = {
@@ -43,6 +45,20 @@ export const transactionService = {
     data: PrintingTransaction,
   ): Promise<Transaction> => {
     const response = await api.post("/transactions/printing", data);
+    return response.data;
+  },
+
+  createELoadingTransaction: async (
+    data: ELoadingTransaction,
+  ): Promise<Transaction> => {
+    const response = await api.post("/transactions/eloading", data);
+    return response.data;
+  },
+
+  createBillsPaymentTransaction: async (
+    data: BillsPaymentTransaction,
+  ): Promise<Transaction> => {
+    const response = await api.post("/transactions/bills-payment", data);
     return response.data;
   },
 

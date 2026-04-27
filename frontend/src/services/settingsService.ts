@@ -1,5 +1,11 @@
 import api from "./api";
-import { ServiceFee, User } from "../types";
+import {
+  ServiceFee,
+  User,
+  Product,
+  CreateProductDto,
+  UpdateProductDto,
+} from "../types";
 
 export const settingsService = {
   // Settings endpoints are intentionally thin wrappers so components stay declarative and transport details remain centralized.
@@ -56,5 +62,27 @@ export const settingsService = {
       role,
     });
     return response.data;
+  },
+
+  getProducts: async (): Promise<Product[]> => {
+    const response = await api.get("/settings/products");
+    return response.data;
+  },
+
+  createProduct: async (data: CreateProductDto): Promise<Product> => {
+    const response = await api.post("/settings/products", data);
+    return response.data;
+  },
+
+  updateProduct: async (
+    id: string,
+    data: UpdateProductDto,
+  ): Promise<Product> => {
+    const response = await api.put(`/settings/products/${id}`, data);
+    return response.data;
+  },
+
+  deleteProduct: async (id: string): Promise<void> => {
+    await api.delete(`/settings/products/${id}`);
   },
 };

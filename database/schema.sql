@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "Transactions" (
     "FailureReason" varchar(500),
     "CreatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now()),
     "UpdatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now()),
-    CONSTRAINT "CK_Transactions_Type" CHECK ("TransactionType" IN ('EWallet', 'Printing')),
+    CONSTRAINT "CK_Transactions_Type" CHECK ("TransactionType" IN ('EWallet', 'Printing', 'ELoading', 'BillsPayment')),
     CONSTRAINT "CK_Transactions_Status" CHECK ("Status" IN ('Pending', 'Completed', 'Failed'))
 );
 
@@ -96,10 +96,42 @@ CREATE TABLE IF NOT EXISTS "DeletedTransactions" (
     "PaperSize" varchar(50),
     "Color" varchar(50),
     "PrintingBaseAmount" numeric(10, 2),
-    "Quantity" integer
+    "Quantity" integer,
+    "ELoadingNetwork" varchar(100),
+    "ELoadingPhoneNumber" varchar(20),
+    "ELoadingBaseAmount" numeric(10, 2),
+    "BillerType" varchar(100),
+    "BillAmount" numeric(10, 2)
 );
 
-CREATE INDEX IF NOT EXISTS "IX_Transactions_UserId" ON "Transactions"("UserId");
+CREATE TABLE IF NOT EXISTS "ELoadingTransactions" (
+    "Id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "TransactionId" uuid NOT NULL UNIQUE REFERENCES "Transactions"("Id") ON DELETE CASCADE,
+    "MobileNetwork" varchar(100) NOT NULL,
+    "PhoneNumber" varchar(20) NOT NULL,
+    "BaseAmount" numeric(10, 2) NOT NULL,
+    "CreatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE TABLE IF NOT EXISTS "BillsPaymentTransactions" (
+    "Id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "TransactionId" uuid NOT NULL UNIQUE REFERENCES "Transactions"("Id") ON DELETE CASCADE,
+    "BillerType" varchar(100) NOT NULL,
+    "BillAmount" numeric(10, 2) NOT NULL,
+    "CreatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE TABLE IF NOT EXISTS "Products" (
+    "Id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "Name" varchar(200) NOT NULL,
+    "Price" numeric(10, 2) NOT NULL,
+    "StockCount" integer NOT NULL DEFAULT 0,
+    "IsActive" boolean NOT NULL DEFAULT true,
+    "CreatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now()),
+    "UpdatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE INDEX IF NOT EXISTS "IX_DeletedTransactions_ELoadingNetwork" ON "DeletedTransactions"("ELoadingNetwork") WHERE "ELoadingNetwork" IS NOT NULL;
 CREATE INDEX IF NOT EXISTS "IX_Transactions_CreatedAt" ON "Transactions"("CreatedAt");
 CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_Email" ON "Users"("Email");
 CREATE INDEX IF NOT EXISTS "IX_DeletedTransactions_UserId" ON "DeletedTransactions"("UserId");

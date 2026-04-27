@@ -9,6 +9,8 @@ public interface IServiceFeeService
 {
     Task<ServiceFee?> GetServiceFeeForEWallet(string provider, string method, decimal baseAmount);
     Task<ServiceFee?> GetServiceFeeForPrinting(string serviceType);
+    Task<ServiceFee?> GetServiceFeeForELoading(string mobileNetwork);
+    Task<ServiceFee?> GetServiceFeeForBillsPayment();
     Task<List<ServiceFeeDto>> GetAllServiceFees();
     Task<ServiceFeeDto?> CreateServiceFee(CreateServiceFeeDto dto);
     Task<ServiceFeeDto?> UpdateServiceFee(Guid id, UpdateServiceFeeDto dto);
@@ -45,6 +47,22 @@ public class ServiceFeeService : IServiceFeeService
             .FirstOrDefaultAsync(f =>
                 f.ServiceType == "Printing" &&
                 f.ProviderType == serviceType);
+    }
+
+    public async Task<ServiceFee?> GetServiceFeeForELoading(string mobileNetwork)
+    {
+        // Specific network match takes precedence over the default catch-all (null ProviderType).
+        return await _context.ServiceFees
+            .Where(f => f.ServiceType == "ELoading" &&
+                        (f.ProviderType == null || f.ProviderType == mobileNetwork))
+            .OrderByDescending(f => f.ProviderType == mobileNetwork)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<ServiceFee?> GetServiceFeeForBillsPayment()
+    {
+        return await _context.ServiceFees
+            .FirstOrDefaultAsync(f => f.ServiceType == "BillsPayment");
     }
 
     public async Task<List<ServiceFeeDto>> GetAllServiceFees()

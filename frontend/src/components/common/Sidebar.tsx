@@ -1,6 +1,16 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { X, LogOut, Settings, Home, Briefcase, Printer } from "lucide-react";
+import {
+  X,
+  LogOut,
+  Settings,
+  Home,
+  Briefcase,
+  Printer,
+  Zap,
+  Receipt,
+  ShoppingBag,
+} from "lucide-react";
 import { useAuthStore } from "../../context/authStore";
 import { authService } from "../../services/authService";
 import { UserAvatar } from "./UserAvatar";
@@ -32,6 +42,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: Briefcase, label: "E-Wallet", path: "/services/ewallet" },
     { icon: Printer, label: "Printing", path: "/services/printing" },
+    { icon: Zap, label: "E-Loading", path: "/services/eloading" },
+    { icon: Receipt, label: "Bills Payment", path: "/services/bills-payment" },
+    { icon: ShoppingBag, label: "Products", path: "/services/products" },
     ...(user?.role === "Admin"
       ? [{ icon: Settings, label: "Settings", path: "/settings" }]
       : []),

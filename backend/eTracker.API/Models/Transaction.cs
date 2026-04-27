@@ -4,7 +4,7 @@ public class Transaction
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    public string TransactionType { get; set; } = string.Empty; // "EWallet" or "Printing"
+    public string TransactionType { get; set; } = string.Empty; // "EWallet", "Printing", "ELoading", "BillsPayment"
     public decimal Amount { get; set; }
     public decimal? ServiceCharge { get; set; }
     public decimal? TotalAmount { get; set; }
@@ -17,4 +17,6 @@ public class Transaction
     public User? User { get; set; }
     public EWalletTransaction? EWalletTransaction { get; set; }
     public PrintingTransaction? PrintingTransaction { get; set; }
+    public ELoadingTransaction? ELoadingTransaction { get; set; }
+    public BillsPaymentTransaction? BillsPaymentTransaction { get; set; }
 }

@@ -12,6 +12,8 @@ public interface ITransactionService
     Task<List<TransactionListDto>> GetTransactionsByPeriod(Guid? userId, string period);
     Task<TransactionListDto?> CreateEWalletTransaction(Guid userId, CreateEWalletTransactionDto dto);
     Task<TransactionListDto?> CreatePrintingTransaction(Guid userId, CreatePrintingTransactionDto dto);
+    Task<TransactionListDto?> CreateELoadingTransaction(Guid userId, CreateELoadingTransactionDto dto);
+    Task<TransactionListDto?> CreateBillsPaymentTransaction(Guid userId, CreateBillsPaymentTransactionDto dto);
 }
 
 public class TransactionService : ITransactionService
@@ -177,6 +179,18 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => (int?)detail.Quantity)
                     .FirstOrDefault(),
+                ELoadingNetwork = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.MobileNetwork)
+                    .FirstOrDefault(),
+                ELoadingPhoneNumber = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.PhoneNumber)
+                    .FirstOrDefault(),
+                BillerType = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.BillerType)
+                    .FirstOrDefault(),
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
@@ -202,6 +216,9 @@ public class TransactionService : ITransactionService
                 PaperSize = transaction.PaperSize,
                 Color = transaction.Color,
                 Quantity = transaction.Quantity,
+                ELoadingNetwork = transaction.ELoadingNetwork,
+                ELoadingPhoneNumber = transaction.ELoadingPhoneNumber,
+                BillerType = transaction.BillerType,
                 CreatedAt = transaction.CreatedAt
             })
             .ToList();
@@ -286,6 +303,18 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => (int?)detail.Quantity)
                     .FirstOrDefault(),
+                ELoadingNetwork = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.MobileNetwork)
+                    .FirstOrDefault(),
+                ELoadingPhoneNumber = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.PhoneNumber)
+                    .FirstOrDefault(),
+                BillerType = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.BillerType)
+                    .FirstOrDefault(),
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
@@ -311,6 +340,9 @@ public class TransactionService : ITransactionService
                 PaperSize = transaction.PaperSize,
                 Color = transaction.Color,
                 Quantity = transaction.Quantity,
+                ELoadingNetwork = transaction.ELoadingNetwork,
+                ELoadingPhoneNumber = transaction.ELoadingPhoneNumber,
+                BillerType = transaction.BillerType,
                 CreatedAt = transaction.CreatedAt
             })
             .ToList();
@@ -437,6 +469,113 @@ public class TransactionService : ITransactionService
         return MapTransaction(transaction);
     }
 
+    public async Task<TransactionListDto?> CreateELoadingTransaction(Guid userId, CreateELoadingTransactionDto dto)
+    {
+        var serviceFee = await _serviceFeeService.GetServiceFeeForELoading(dto.MobileNetwork);
+        var serviceCharge = serviceFee?.FlatFee ?? 5m;
+        var totalAmount = dto.BaseAmount + serviceCharge;
+
+        var transaction = new Transaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TransactionType = "ELoading",
+            Amount = dto.BaseAmount,
+            ServiceCharge = serviceCharge,
+            TotalAmount = totalAmount,
+            Status = "Pending"
+        };
+
+        _context.Transactions.Add(transaction);
+        await _context.SaveChangesAsync();
+
+        ELoadingTransaction? eLoadingTransaction = null;
+
+        try
+        {
+            eLoadingTransaction = new ELoadingTransaction
+            {
+                Id = Guid.NewGuid(),
+                TransactionId = transaction.Id,
+                MobileNetwork = dto.MobileNetwork,
+                PhoneNumber = dto.PhoneNumber,
+                BaseAmount = dto.BaseAmount
+            };
+
+            _context.ELoadingTransactions.Add(eLoadingTransaction);
+            transaction.ELoadingTransaction = eLoadingTransaction;
+            transaction.Status = "Completed";
+            transaction.FailureReason = null;
+            transaction.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            if (eLoadingTransaction != null)
+            {
+                _context.Entry(eLoadingTransaction).State = EntityState.Detached;
+            }
+
+            await MarkTransactionAsFailedAsync(transaction, ex);
+        }
+
+        return MapTransaction(transaction);
+    }
+
+    public async Task<TransactionListDto?> CreateBillsPaymentTransaction(Guid userId, CreateBillsPaymentTransactionDto dto)
+    {
+        var serviceFee = await _serviceFeeService.GetServiceFeeForBillsPayment();
+        var serviceCharge = serviceFee?.FlatFee ?? 25m;
+        var totalAmount = dto.BillAmount + serviceCharge;
+
+        var transaction = new Transaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TransactionType = "BillsPayment",
+            Amount = dto.BillAmount,
+            ServiceCharge = serviceCharge,
+            TotalAmount = totalAmount,
+            Status = "Pending"
+        };
+
+        _context.Transactions.Add(transaction);
+        await _context.SaveChangesAsync();
+
+        BillsPaymentTransaction? billsPaymentTransaction = null;
+
+        try
+        {
+            billsPaymentTransaction = new BillsPaymentTransaction
+            {
+                Id = Guid.NewGuid(),
+                TransactionId = transaction.Id,
+                BillerType = dto.BillerType,
+                BillAmount = dto.BillAmount
+            };
+
+            _context.BillsPaymentTransactions.Add(billsPaymentTransaction);
+            transaction.BillsPaymentTransaction = billsPaymentTransaction;
+            transaction.Status = "Completed";
+            transaction.FailureReason = null;
+            transaction.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            if (billsPaymentTransaction != null)
+            {
+                _context.Entry(billsPaymentTransaction).State = EntityState.Detached;
+            }
+
+            await MarkTransactionAsFailedAsync(transaction, ex);
+        }
+
+        return MapTransaction(transaction);
+    }
+
     private async Task MarkTransactionAsFailedAsync(Transaction transaction, Exception exception)
     {
         // Failure details are trimmed and stored back on the transaction so the dashboard can explain partial write failures.
@@ -492,6 +631,9 @@ public class TransactionService : ITransactionService
             PaperSize = transaction.PrintingTransaction?.PaperSize,
             Color = transaction.PrintingTransaction?.Color,
             Quantity = transaction.PrintingTransaction?.Quantity,
+            ELoadingNetwork = transaction.ELoadingTransaction?.MobileNetwork,
+            ELoadingPhoneNumber = transaction.ELoadingTransaction?.PhoneNumber,
+            BillerType = transaction.BillsPaymentTransaction?.BillerType,
             CreatedAt = transaction.CreatedAt
         };
     }

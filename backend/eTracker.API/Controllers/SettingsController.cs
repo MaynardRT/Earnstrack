@@ -14,11 +14,13 @@ namespace eTracker.API.Controllers;
 public class SettingsController : ControllerBase
 {
     private readonly IServiceFeeService _serviceFeeService;
+    private readonly IProductService _productService;
     private readonly ApplicationDbContext _context;
 
-    public SettingsController(IServiceFeeService serviceFeeService, ApplicationDbContext context)
+    public SettingsController(IServiceFeeService serviceFeeService, IProductService productService, ApplicationDbContext context)
     {
         _serviceFeeService = serviceFeeService;
+        _productService = productService;
         _context = context;
     }
 
@@ -199,5 +201,46 @@ public class SettingsController : ControllerBase
         }
 
         return ReceiptContentHelper.ToDataUrl(screenshotContent, screenshotContentType);
+    }
+
+    // Products Endpoints
+    [HttpGet("products")]
+    public async Task<ActionResult<List<ProductDto>>> GetProducts()
+    {
+        var products = await _productService.GetAllProducts();
+        return Ok(products);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("products")]
+    public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] CreateProductDto request)
+    {
+        var product = await _productService.CreateProduct(request);
+        if (product == null)
+            return BadRequest("Failed to create product");
+
+        return Ok(product);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("products/{id}")]
+    public async Task<ActionResult<ProductDto>> UpdateProduct(Guid id, [FromBody] UpdateProductDto request)
+    {
+        var product = await _productService.UpdateProduct(id, request);
+        if (product == null)
+            return NotFound();
+
+        return Ok(product);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("products/{id}")]
+    public async Task<IActionResult> DeleteProduct(Guid id)
+    {
+        var result = await _productService.DeleteProduct(id);
+        if (!result)
+            return NotFound();
+
+        return NoContent();
     }
 }

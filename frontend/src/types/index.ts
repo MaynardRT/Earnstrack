@@ -17,7 +17,7 @@ export interface AuthResponse {
 // Transaction Types
 export interface Transaction {
   id: string;
-  transactionType: "EWallet" | "Printing";
+  transactionType: "EWallet" | "Printing" | "ELoading" | "BillsPayment";
   amount: number;
   serviceCharge: number;
   totalAmount: number;
@@ -34,6 +34,9 @@ export interface Transaction {
   paperSize?: string;
   color?: string;
   quantity?: number;
+  eLoadingNetwork?: string;
+  eLoadingPhoneNumber?: string;
+  billerType?: string;
   createdAt: string;
 }
 
@@ -69,6 +72,40 @@ export interface PrintingTransaction {
   color: "Grayscale" | "Colored";
   baseAmount: number;
   quantity: number;
+}
+
+export interface ELoadingTransaction {
+  mobileNetwork: string;
+  phoneNumber: string;
+  baseAmount: number;
+}
+
+export interface BillsPaymentTransaction {
+  billerType: string;
+  billAmount: number;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stockCount: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProductDto {
+  name: string;
+  price: number;
+  stockCount: number;
+}
+
+export interface UpdateProductDto {
+  name?: string;
+  price?: number;
+  stockCount?: number;
+  isActive?: boolean;
 }
 
 // Settings Types

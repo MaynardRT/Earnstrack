@@ -93,6 +93,11 @@ public class TransactionListDto
     public string? PaperSize { get; set; }
     public string? Color { get; set; }
     public int? Quantity { get; set; }
+    // E-Loading fields
+    public string? ELoadingNetwork { get; set; }
+    public string? ELoadingPhoneNumber { get; set; }
+    // Bills Payment fields
+    public string? BillerType { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
@@ -115,6 +120,48 @@ public class CreatePrintingTransactionDto
     public string Color { get; set; } = string.Empty; // "Grayscale" or "Colored"
     public decimal BaseAmount { get; set; }
     public int Quantity { get; set; } = 1;
+}
+
+// E-Loading DTOs
+public class CreateELoadingTransactionDto
+{
+    public string MobileNetwork { get; set; } = string.Empty; // Globe, Smart, Dito, TnT, TM, Sun, SurftoSawa
+    public string PhoneNumber { get; set; } = string.Empty;
+    public decimal BaseAmount { get; set; }
+}
+
+// Bills Payment DTOs
+public class CreateBillsPaymentTransactionDto
+{
+    public string BillerType { get; set; } = string.Empty; // Meralco, Maynilad, Manila Water, PLDT, Converge, Globe
+    public decimal BillAmount { get; set; }
+}
+
+// Product DTOs
+public class ProductDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int StockCount { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class CreateProductDto
+{
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int StockCount { get; set; } = 0;
+}
+
+public class UpdateProductDto
+{
+    public string? Name { get; set; }
+    public decimal? Price { get; set; }
+    public int? StockCount { get; set; }
+    public bool? IsActive { get; set; }
 }
 
 // Service Fee DTOs
