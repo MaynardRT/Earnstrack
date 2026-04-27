@@ -16,7 +16,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<EWalletTransaction> EWalletTransactions { get; set; }
     public DbSet<PrintingTransaction> PrintingTransactions { get; set; }
     public DbSet<ServiceFee> ServiceFees { get; set; }
-    public DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -181,10 +180,5 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Transaction>()
             .HasIndex(t => t.CreatedAt);
 
-        modelBuilder.Entity<AuditLog>()
-            .HasOne(a => a.User)
-            .WithMany(u => u.AuditLogs)
-            .HasForeignKey(a => a.UserId)
-            .OnDelete(DeleteBehavior.SetNull);
     }
 }

@@ -42,13 +42,6 @@ public class UserManagementDto
     public DateTime CreatedAt { get; set; }
 }
 
-public class CreateUserDto
-{
-    public string Email { get; set; } = string.Empty;
-    public string FullName { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
-}
-
 public class UpdateUserDto
 {
     public string FullName { get; set; } = string.Empty;
@@ -103,11 +96,6 @@ public class TransactionListDto
     public DateTime CreatedAt { get; set; }
 }
 
-public class CreateTransactionDto
-{
-    public string TransactionType { get; set; } = string.Empty; // "EWallet" or "Printing"
-}
-
 // EWallet DTOs
 public class CreateEWalletTransactionDto
 {
@@ -119,18 +107,6 @@ public class CreateEWalletTransactionDto
     public string? ScreenshotBase64 { get; set; }
 }
 
-public class EWalletTransactionDto
-{
-    public Guid Id { get; set; }
-    public string Provider { get; set; } = string.Empty;
-    public string Method { get; set; } = string.Empty;
-    public string AmountBracket { get; set; } = string.Empty;
-    public string ReferenceNumber { get; set; } = string.Empty;
-    public decimal BaseAmount { get; set; }
-    public decimal TotalAmount { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
 // Printing DTOs
 public class CreatePrintingTransactionDto
 {
@@ -139,18 +115,6 @@ public class CreatePrintingTransactionDto
     public string Color { get; set; } = string.Empty; // "Grayscale" or "Colored"
     public decimal BaseAmount { get; set; }
     public int Quantity { get; set; } = 1;
-}
-
-public class PrintingTransactionDto
-{
-    public Guid Id { get; set; }
-    public string ServiceType { get; set; } = string.Empty;
-    public string PaperSize { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
-    public decimal BaseAmount { get; set; }
-    public int Quantity { get; set; }
-    public decimal TotalAmount { get; set; }
-    public DateTime CreatedAt { get; set; }
 }
 
 // Service Fee DTOs

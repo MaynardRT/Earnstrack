@@ -13,7 +13,6 @@ import { BasicLoginPage } from "./components/auth/BasicLoginPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { EWalletForm } from "./components/services/EWalletForm";
 import { PrintingForm } from "./components/services/PrintingForm";
-import { ProductsPage } from "./components/services/ProductsPage";
 import { SettingsPage } from "./components/settings/SettingsPage";
 
 const LAST_ACTIVITY_KEY = "lastActivityAt";
@@ -169,17 +168,6 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <PrintingForm />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/services/products"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <ProductsPage />
               </MainLayout>
             </ProtectedRoute>
           }

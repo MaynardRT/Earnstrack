@@ -18,8 +18,7 @@ public static class DatabaseInitializer
         "DeletedTransactions",
         "EWalletTransactions",
         "PrintingTransactions",
-        "ServiceFees",
-        "AuditLogs"
+        "ServiceFees"
     ];
 
     public static async Task InitializeAsync(IServiceProvider services)

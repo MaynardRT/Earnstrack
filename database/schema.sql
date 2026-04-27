@@ -99,17 +99,6 @@ CREATE TABLE IF NOT EXISTS "DeletedTransactions" (
     "Quantity" integer
 );
 
-CREATE TABLE IF NOT EXISTS "AuditLogs" (
-    "Id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "UserId" uuid REFERENCES "Users"("Id") ON DELETE SET NULL,
-    "Action" text,
-    "TableName" text,
-    "RecordId" uuid,
-    "OldValues" text,
-    "NewValues" text,
-    "CreatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now())
-);
-
 CREATE INDEX IF NOT EXISTS "IX_Transactions_UserId" ON "Transactions"("UserId");
 CREATE INDEX IF NOT EXISTS "IX_Transactions_CreatedAt" ON "Transactions"("CreatedAt");
 CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_Email" ON "Users"("Email");
