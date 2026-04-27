@@ -64,8 +64,7 @@ public class TransactionsController : ControllerBase
     [HttpPost("ewallet")]
     public async Task<ActionResult<TransactionListDto>> CreateEWalletTransaction([FromBody] CreateEWalletTransactionDto request)
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userId, out var userGuid))
+        if (!TryGetCurrentUserId(out var userGuid))
             return Unauthorized();
 
         var transaction = await _transactionService.CreateEWalletTransaction(userGuid, request);
@@ -78,8 +77,7 @@ public class TransactionsController : ControllerBase
     [HttpPost("printing")]
     public async Task<ActionResult<TransactionListDto>> CreatePrintingTransaction([FromBody] CreatePrintingTransactionDto request)
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userId, out var userGuid))
+        if (!TryGetCurrentUserId(out var userGuid))
             return Unauthorized();
 
         var transaction = await _transactionService.CreatePrintingTransaction(userGuid, request);
@@ -92,8 +90,7 @@ public class TransactionsController : ControllerBase
     [HttpPost("eloading")]
     public async Task<ActionResult<TransactionListDto>> CreateELoadingTransaction([FromBody] CreateELoadingTransactionDto request)
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userId, out var userGuid))
+        if (!TryGetCurrentUserId(out var userGuid))
             return Unauthorized();
 
         var transaction = await _transactionService.CreateELoadingTransaction(userGuid, request);
@@ -106,8 +103,7 @@ public class TransactionsController : ControllerBase
     [HttpPost("bills-payment")]
     public async Task<ActionResult<TransactionListDto>> CreateBillsPaymentTransaction([FromBody] CreateBillsPaymentTransactionDto request)
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (!Guid.TryParse(userId, out var userGuid))
+        if (!TryGetCurrentUserId(out var userGuid))
             return Unauthorized();
 
         var transaction = await _transactionService.CreateBillsPaymentTransaction(userGuid, request);

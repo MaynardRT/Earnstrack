@@ -144,7 +144,7 @@ public class SettingsController : ControllerBase
     [HttpGet("export/transactions")]
     public async Task<IActionResult> ExportTransactions()
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userId, out var userGuid))
             return Unauthorized();
 

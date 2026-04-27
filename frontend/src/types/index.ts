@@ -17,7 +17,12 @@ export interface AuthResponse {
 // Transaction Types
 export interface Transaction {
   id: string;
-  transactionType: "EWallet" | "Printing" | "ELoading" | "BillsPayment";
+  transactionType:
+    | "EWallet"
+    | "Printing"
+    | "ELoading"
+    | "BillsPayment"
+    | "Products";
   amount: number;
   serviceCharge: number;
   totalAmount: number;
