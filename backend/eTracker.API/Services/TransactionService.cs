@@ -194,9 +194,33 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.PhoneNumber)
                     .FirstOrDefault(),
+                ELoadingScreenshotUrl = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotUrl)
+                    .FirstOrDefault(),
+                ELoadingScreenshotContent = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContent)
+                    .FirstOrDefault(),
+                ELoadingScreenshotContentType = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContentType)
+                    .FirstOrDefault(),
                 BillerType = _context.BillsPaymentTransactions
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.BillerType)
+                    .FirstOrDefault(),
+                BillsPaymentScreenshotUrl = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotUrl)
+                    .FirstOrDefault(),
+                BillsPaymentScreenshotContent = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContent)
+                    .FirstOrDefault(),
+                BillsPaymentScreenshotContentType = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContentType)
                     .FirstOrDefault(),
                 ProductName = t.ProductName,
                 CreatedAt = t.CreatedAt
@@ -218,8 +242,14 @@ public class TransactionService : ITransactionService
                 Method = transaction.Method,
                 AmountBracket = transaction.AmountBracket,
                 ReferenceNumber = transaction.ReferenceNumber,
-                ScreenshotUrl = transaction.ScreenshotUrl,
-                ScreenshotDataUrl = ReceiptContentHelper.ToDataUrl(transaction.ScreenshotContent, transaction.ScreenshotContentType),
+                ScreenshotUrl = transaction.TransactionType == "ELoading" ? transaction.ELoadingScreenshotUrl
+                              : transaction.TransactionType == "BillsPayment" ? transaction.BillsPaymentScreenshotUrl
+                              : transaction.ScreenshotUrl,
+                ScreenshotDataUrl = transaction.TransactionType == "ELoading"
+                    ? ReceiptContentHelper.ToDataUrl(transaction.ELoadingScreenshotContent, transaction.ELoadingScreenshotContentType)
+                    : transaction.TransactionType == "BillsPayment"
+                    ? ReceiptContentHelper.ToDataUrl(transaction.BillsPaymentScreenshotContent, transaction.BillsPaymentScreenshotContentType)
+                    : ReceiptContentHelper.ToDataUrl(transaction.ScreenshotContent, transaction.ScreenshotContentType),
                 PrintingServiceType = transaction.PrintingServiceType,
                 PaperSize = transaction.PaperSize,
                 Color = transaction.Color,
@@ -320,9 +350,33 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.PhoneNumber)
                     .FirstOrDefault(),
+                ELoadingScreenshotUrl = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotUrl)
+                    .FirstOrDefault(),
+                ELoadingScreenshotContent = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContent)
+                    .FirstOrDefault(),
+                ELoadingScreenshotContentType = _context.ELoadingTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContentType)
+                    .FirstOrDefault(),
                 BillerType = _context.BillsPaymentTransactions
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.BillerType)
+                    .FirstOrDefault(),
+                BillsPaymentScreenshotUrl = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotUrl)
+                    .FirstOrDefault(),
+                BillsPaymentScreenshotContent = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContent)
+                    .FirstOrDefault(),
+                BillsPaymentScreenshotContentType = _context.BillsPaymentTransactions
+                    .Where(detail => detail.TransactionId == t.Id)
+                    .Select(detail => detail.ScreenshotContentType)
                     .FirstOrDefault(),
                 ProductName = t.ProductName,
                 CreatedAt = t.CreatedAt
@@ -344,8 +398,14 @@ public class TransactionService : ITransactionService
                 Method = transaction.Method,
                 AmountBracket = transaction.AmountBracket,
                 ReferenceNumber = transaction.ReferenceNumber,
-                ScreenshotUrl = transaction.ScreenshotUrl,
-                ScreenshotDataUrl = ReceiptContentHelper.ToDataUrl(transaction.ScreenshotContent, transaction.ScreenshotContentType),
+                ScreenshotUrl = transaction.TransactionType == "ELoading" ? transaction.ELoadingScreenshotUrl
+                              : transaction.TransactionType == "BillsPayment" ? transaction.BillsPaymentScreenshotUrl
+                              : transaction.ScreenshotUrl,
+                ScreenshotDataUrl = transaction.TransactionType == "ELoading"
+                    ? ReceiptContentHelper.ToDataUrl(transaction.ELoadingScreenshotContent, transaction.ELoadingScreenshotContentType)
+                    : transaction.TransactionType == "BillsPayment"
+                    ? ReceiptContentHelper.ToDataUrl(transaction.BillsPaymentScreenshotContent, transaction.BillsPaymentScreenshotContentType)
+                    : ReceiptContentHelper.ToDataUrl(transaction.ScreenshotContent, transaction.ScreenshotContentType),
                 PrintingServiceType = transaction.PrintingServiceType,
                 PaperSize = transaction.PaperSize,
                 Color = transaction.Color,
@@ -504,13 +564,18 @@ public class TransactionService : ITransactionService
 
         try
         {
+            var receipt = await _receiptStorageService.SaveReceiptAsync(dto.ScreenshotBase64);
+
             eLoadingTransaction = new ELoadingTransaction
             {
                 Id = Guid.NewGuid(),
                 TransactionId = transaction.Id,
                 MobileNetwork = dto.MobileNetwork,
                 PhoneNumber = dto.PhoneNumber,
-                BaseAmount = dto.BaseAmount
+                BaseAmount = dto.BaseAmount,
+                ScreenshotUrl = receipt?.RelativeUrl,
+                ScreenshotContent = receipt?.Content,
+                ScreenshotContentType = receipt?.ContentType
             };
 
             _context.ELoadingTransactions.Add(eLoadingTransaction);
@@ -558,12 +623,17 @@ public class TransactionService : ITransactionService
 
         try
         {
+            var receipt = await _receiptStorageService.SaveReceiptAsync(dto.ScreenshotBase64);
+
             billsPaymentTransaction = new BillsPaymentTransaction
             {
                 Id = Guid.NewGuid(),
                 TransactionId = transaction.Id,
                 BillerType = dto.BillerType,
-                BillAmount = dto.BillAmount
+                BillAmount = dto.BillAmount,
+                ScreenshotUrl = receipt?.RelativeUrl,
+                ScreenshotContent = receipt?.Content,
+                ScreenshotContentType = receipt?.ContentType
             };
 
             _context.BillsPaymentTransactions.Add(billsPaymentTransaction);

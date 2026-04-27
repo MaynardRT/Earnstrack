@@ -130,6 +130,7 @@ public class CreateELoadingTransactionDto
     public string MobileNetwork { get; set; } = string.Empty; // Globe, Smart, Dito, TnT, TM, Sun, SurftoSawa
     public string PhoneNumber { get; set; } = string.Empty;
     public decimal BaseAmount { get; set; }
+    public string? ScreenshotBase64 { get; set; }
 }
 
 // Bills Payment DTOs
@@ -137,6 +138,7 @@ public class CreateBillsPaymentTransactionDto
 {
     public string BillerType { get; set; } = string.Empty; // Meralco, Maynilad, Manila Water, PLDT, Converge, Globe
     public decimal BillAmount { get; set; }
+    public string? ScreenshotBase64 { get; set; }
 }
 
 // Product DTOs

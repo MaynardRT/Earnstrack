@@ -697,6 +697,106 @@ export const Dashboard: React.FC = () => {
                   />
                 </div>
               </div>
+            ) : selectedTransaction.transactionType === "ELoading" ? (
+              <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  E-Loading Details
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailItem
+                    label="Mobile Network"
+                    value={selectedTransaction.eLoadingNetwork || "Unknown"}
+                  />
+                  <DetailItem
+                    label="Phone Number"
+                    value={selectedTransaction.eLoadingPhoneNumber || "Unknown"}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Screenshot Reference
+                  </p>
+                  {screenshotPreviewUrl ? (
+                    <div className="space-y-3">
+                      <img
+                        src={screenshotPreviewUrl}
+                        alt="Transaction screenshot reference"
+                        className="max-h-[28rem] w-full rounded-xl border border-gray-200 object-contain dark:border-gray-700"
+                        onError={() => {
+                          if (
+                            screenshotFallbackUrl &&
+                            !useEmbeddedScreenshotFallback
+                          ) {
+                            setUseEmbeddedScreenshotFallback(true);
+                          }
+                        }}
+                      />
+                      <a
+                        href={screenshotPreviewUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                      >
+                        Open screenshot in new tab
+                      </a>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      No screenshot was attached to this transaction.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : selectedTransaction.transactionType === "BillsPayment" ? (
+              <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Bills Payment Details
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailItem
+                    label="Biller"
+                    value={selectedTransaction.billerType || "Unknown"}
+                  />
+                  <DetailItem
+                    label="Bill Amount"
+                    value={`₱${selectedTransaction.amount.toFixed(2)}`}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Screenshot Reference
+                  </p>
+                  {screenshotPreviewUrl ? (
+                    <div className="space-y-3">
+                      <img
+                        src={screenshotPreviewUrl}
+                        alt="Transaction screenshot reference"
+                        className="max-h-[28rem] w-full rounded-xl border border-gray-200 object-contain dark:border-gray-700"
+                        onError={() => {
+                          if (
+                            screenshotFallbackUrl &&
+                            !useEmbeddedScreenshotFallback
+                          ) {
+                            setUseEmbeddedScreenshotFallback(true);
+                          }
+                        }}
+                      />
+                      <a
+                        href={screenshotPreviewUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                      >
+                        Open screenshot in new tab
+                      </a>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      No screenshot was attached to this transaction.
+                    </p>
+                  )}
+                </div>
+              </div>
             ) : null}
           </div>
         )}
