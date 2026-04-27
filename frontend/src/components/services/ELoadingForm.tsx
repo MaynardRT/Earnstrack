@@ -28,9 +28,33 @@ export const ELoadingForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const serviceCharge = getServiceCharge(formData.mobileNetwork);
   const totalAmount = formData.baseAmount + serviceCharge;
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        setError("Please upload a valid image file");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData((prev) => ({ ...prev, screenshotBase64: base64String }));
+        setImagePreview(base64String);
+        setError(null);
+      };
+      reader.onerror = () => setError("Failed to read image file");
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -61,6 +85,7 @@ export const ELoadingForm: React.FC = () => {
       await transactionService.createELoadingTransaction(formData);
       setSuccess(true);
       setFormData({ mobileNetwork: "Globe", phoneNumber: "", baseAmount: 0 });
+      setImagePreview(null);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(
@@ -147,6 +172,49 @@ export const ELoadingForm: React.FC = () => {
               placeholder="0.00"
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
             />
+          </div>
+
+          {/* Screenshot Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Receipt/Screenshot (Optional)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              disabled={isLoading}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-blue-500 file:text-white file:cursor-pointer hover:file:bg-blue-600"
+              aria-label="Upload receipt screenshot"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Max file size: 5MB (JPG, PNG, GIF)
+            </p>
+            {imagePreview && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Preview:
+                </p>
+                <img
+                  src={imagePreview}
+                  alt="Receipt preview"
+                  className="max-w-xs h-auto rounded-lg border border-gray-300 dark:border-gray-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview(null);
+                    setFormData((prev) => ({
+                      ...prev,
+                      screenshotBase64: undefined,
+                    }));
+                  }}
+                  className="mt-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                >
+                  Remove image
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Fee Summary */}

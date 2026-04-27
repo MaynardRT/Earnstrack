@@ -78,11 +78,13 @@ export interface ELoadingTransaction {
   mobileNetwork: string;
   phoneNumber: string;
   baseAmount: number;
+  screenshotBase64?: string;
 }
 
 export interface BillsPaymentTransaction {
   billerType: string;
   billAmount: number;
+  screenshotBase64?: string;
 }
 
 export interface Product {
