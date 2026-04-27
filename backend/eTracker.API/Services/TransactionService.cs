@@ -18,6 +18,11 @@ public interface ITransactionService
 
 public class TransactionService : ITransactionService
 {
+    // Philippine Standard Time (UTC+8) — no DST. Used so daily/weekly/monthly
+    // summary windows reset at local midnight, not UTC midnight.
+    private static readonly TimeZoneInfo _localTimeZone =
+        TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
+
     private readonly ApplicationDbContext _context;
     private readonly IServiceFeeService _serviceFeeService;
     private readonly IReceiptStorageService _receiptStorageService;
@@ -34,13 +39,15 @@ public class TransactionService : ITransactionService
 
     public async Task<TransactionSummaryDto> GetTransactionSummary(Guid? userId = null, bool includeStatusBreakdown = false)
     {
-        // Summary windows are calendar-based by design so dashboard totals match how operators read daily, weekly, and monthly performance.
-        var today = GetStartOfUtcDay(DateTime.UtcNow);
-        var tomorrow = today.AddDays(1);
-        var weekStart = GetStartOfWeek(today);
+        // Summary windows are calendar-based in Philippine local time (UTC+8) so daily
+        // totals reset at local midnight rather than UTC midnight.
+        var utcNow = DateTime.UtcNow;
+        var today = GetStartOfLocalDay(utcNow);
+        var tomorrow = GetStartOfLocalDay(utcNow.AddDays(1));
+        var weekStart = GetStartOfLocalWeek(utcNow);
         var nextWeekStart = weekStart.AddDays(7);
-        var monthStart = GetStartOfMonth(today);
-        var nextMonthStart = monthStart.AddMonths(1);
+        var monthStart = GetStartOfLocalMonth(utcNow);
+        var nextMonthStart = GetStartOfLocalMonth(utcNow, 1);
 
         var transactionsQuery = _context.Transactions.AsQueryable();
 
@@ -226,13 +233,13 @@ public class TransactionService : ITransactionService
 
     public async Task<List<TransactionListDto>> GetTransactionsByPeriod(Guid? userId, string period)
     {
-        var today = GetStartOfUtcDay(DateTime.UtcNow);
+        var utcNow = DateTime.UtcNow;
         var (startDate, endDate) = period.ToLower() switch
         {
-            "daily" => (today, today.AddDays(1)),
-            "weekly" => (GetStartOfWeek(today), GetStartOfWeek(today).AddDays(7)),
-            "monthly" => (GetStartOfMonth(today), GetStartOfMonth(today).AddMonths(1)),
-            _ => (GetStartOfMonth(today), GetStartOfMonth(today).AddMonths(1))
+            "daily" => (GetStartOfLocalDay(utcNow), GetStartOfLocalDay(utcNow.AddDays(1))),
+            "weekly" => (GetStartOfLocalWeek(utcNow), GetStartOfLocalWeek(utcNow).AddDays(7)),
+            "monthly" => (GetStartOfLocalMonth(utcNow), GetStartOfLocalMonth(utcNow, 1)),
+            _ => (GetStartOfLocalMonth(utcNow), GetStartOfLocalMonth(utcNow, 1))
         };
 
         var transactionsQuery = _context.Transactions
@@ -638,21 +645,28 @@ public class TransactionService : ITransactionService
         };
     }
 
-    private static DateTime GetStartOfUtcDay(DateTime date)
+    // All boundary helpers convert Philippine local midnight to UTC for DB comparisons.
+    private static DateTime GetStartOfLocalDay(DateTime utcNow)
     {
-        return new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Utc);
+        var local = TimeZoneInfo.ConvertTimeFromUtc(utcNow, _localTimeZone);
+        var midnight = new DateTime(local.Year, local.Month, local.Day, 0, 0, 0, DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTimeToUtc(midnight, _localTimeZone);
     }
 
-    private static DateTime GetStartOfWeek(DateTime date)
+    private static DateTime GetStartOfLocalWeek(DateTime utcNow)
     {
         // Monday is treated as the operational week boundary across summaries and reports.
-        var offset = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-        return GetStartOfUtcDay(date.AddDays(-offset));
+        var local = TimeZoneInfo.ConvertTimeFromUtc(utcNow, _localTimeZone);
+        var offset = ((int)local.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        var weekStart = new DateTime(local.Year, local.Month, local.Day, 0, 0, 0, DateTimeKind.Unspecified).AddDays(-offset);
+        return TimeZoneInfo.ConvertTimeToUtc(weekStart, _localTimeZone);
     }
 
-    private static DateTime GetStartOfMonth(DateTime date)
+    private static DateTime GetStartOfLocalMonth(DateTime utcNow, int monthOffset = 0)
     {
-        return new DateTime(date.Year, date.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var local = TimeZoneInfo.ConvertTimeFromUtc(utcNow, _localTimeZone);
+        var monthStart = new DateTime(local.Year, local.Month, 1, 0, 0, 0, DateTimeKind.Unspecified).AddMonths(monthOffset);
+        return TimeZoneInfo.ConvertTimeToUtc(monthStart, _localTimeZone);
     }
 
     private decimal CalculateServiceCharge(decimal baseAmount, ServiceFee? fee)
