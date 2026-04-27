@@ -243,4 +243,18 @@ public class SettingsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPost("products/{id}/sell")]
+    public async Task<ActionResult<ProductDto>> SellProduct(Guid id)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userId, out var userGuid))
+            return Unauthorized();
+
+        var product = await _productService.SellProduct(id, userGuid);
+        if (product == null)
+            return BadRequest("Product not found, out of stock, or inactive.");
+
+        return Ok(product);
+    }
 }

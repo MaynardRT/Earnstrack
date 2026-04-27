@@ -85,4 +85,9 @@ export const settingsService = {
   deleteProduct: async (id: string): Promise<void> => {
     await api.delete(`/settings/products/${id}`);
   },
+
+  sellProduct: async (id: string): Promise<Product> => {
+    const response = await api.post(`/settings/products/${id}/sell`);
+    return response.data;
+  },
 };

@@ -11,6 +11,7 @@ public interface IProductService
     Task<ProductDto?> CreateProduct(CreateProductDto dto);
     Task<ProductDto?> UpdateProduct(Guid id, UpdateProductDto dto);
     Task<bool> DeleteProduct(Guid id);
+    Task<ProductDto?> SellProduct(Guid id, Guid userId);
 }
 
 public class ProductService : IProductService
@@ -109,5 +110,41 @@ public class ProductService : IProductService
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<ProductDto?> SellProduct(Guid id, Guid userId)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null || !product.IsActive || product.StockCount <= 0)
+            return null;
+
+        product.StockCount -= 1;
+        product.UpdatedAt = DateTime.UtcNow;
+
+        var transaction = new Transaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TransactionType = "Products",
+            Amount = product.Price,
+            ServiceCharge = 0,
+            TotalAmount = product.Price,
+            Status = "Completed"
+        };
+
+        _context.Transactions.Add(transaction);
+        _context.Products.Update(product);
+        await _context.SaveChangesAsync();
+
+        return new ProductDto
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Price = product.Price,
+            StockCount = product.StockCount,
+            IsActive = product.IsActive,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt
+        };
     }
 }

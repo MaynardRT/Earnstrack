@@ -51,19 +51,19 @@ public class TransactionService : ITransactionService
 
         var dailyTotal = await transactionsQuery
             .Where(t => t.CreatedAt >= today && t.CreatedAt < tomorrow && t.Status == "Completed")
-            .SumAsync(t => t.TransactionType == "EWallet"
+            .SumAsync(t => (t.TransactionType == "EWallet" || t.TransactionType == "ELoading" || t.TransactionType == "BillsPayment")
                 ? (t.ServiceCharge ?? 0)
                 : (t.TotalAmount ?? 0));
 
         var weeklyTotal = await transactionsQuery
             .Where(t => t.CreatedAt >= weekStart && t.CreatedAt < nextWeekStart && t.Status == "Completed")
-            .SumAsync(t => t.TransactionType == "EWallet"
+            .SumAsync(t => (t.TransactionType == "EWallet" || t.TransactionType == "ELoading" || t.TransactionType == "BillsPayment")
                 ? (t.ServiceCharge ?? 0)
                 : (t.TotalAmount ?? 0));
 
         var monthlyTotal = await transactionsQuery
             .Where(t => t.CreatedAt >= monthStart && t.CreatedAt < nextMonthStart && t.Status == "Completed")
-            .SumAsync(t => t.TransactionType == "EWallet"
+            .SumAsync(t => (t.TransactionType == "EWallet" || t.TransactionType == "ELoading" || t.TransactionType == "BillsPayment")
                 ? (t.ServiceCharge ?? 0)
                 : (t.TotalAmount ?? 0));
 
@@ -79,7 +79,7 @@ public class TransactionService : ITransactionService
                 {
                     Status = g.Key,
                     Count = g.Count(),
-                    Total = g.Sum(t => t.TransactionType == "EWallet"
+                    Total = g.Sum(t => (t.TransactionType == "EWallet" || t.TransactionType == "ELoading" || t.TransactionType == "BillsPayment")
                         ? (t.ServiceCharge ?? 0)
                         : (t.TotalAmount ?? 0))
                 })

@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "Transactions" (
     "FailureReason" varchar(500),
     "CreatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now()),
     "UpdatedAt" timestamptz NOT NULL DEFAULT timezone('utc', now()),
-    CONSTRAINT "CK_Transactions_Type" CHECK ("TransactionType" IN ('EWallet', 'Printing', 'ELoading', 'BillsPayment')),
+    CONSTRAINT "CK_Transactions_Type" CHECK ("TransactionType" IN ('EWallet', 'Printing', 'ELoading', 'BillsPayment', 'Products')),
     CONSTRAINT "CK_Transactions_Status" CHECK ("Status" IN ('Pending', 'Completed', 'Failed'))
 );
 
