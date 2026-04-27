@@ -129,7 +129,8 @@ public class ProductService : IProductService
             Amount = product.Price,
             ServiceCharge = 0,
             TotalAmount = product.Price,
-            Status = "Completed"
+            Status = "Completed",
+            ProductName = product.Name
         };
 
         _context.Transactions.Add(transaction);

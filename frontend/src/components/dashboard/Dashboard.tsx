@@ -657,7 +657,7 @@ export const Dashboard: React.FC = () => {
                   )}
                 </div>
               </div>
-            ) : (
+            ) : selectedTransaction.transactionType === "Printing" ? (
               <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Printing Details
@@ -681,7 +681,23 @@ export const Dashboard: React.FC = () => {
                   />
                 </div>
               </div>
-            )}
+            ) : selectedTransaction.transactionType === "Products" ? (
+              <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Product Details
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <DetailItem
+                    label="Item Name"
+                    value={selectedTransaction.productName || "Unknown"}
+                  />
+                  <DetailItem
+                    label="Price"
+                    value={`₱${selectedTransaction.totalAmount.toFixed(2)}`}
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </Modal>

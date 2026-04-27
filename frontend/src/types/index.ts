@@ -42,6 +42,7 @@ export interface Transaction {
   eLoadingNetwork?: string;
   eLoadingPhoneNumber?: string;
   billerType?: string;
+  productName?: string;
   createdAt: string;
 }
 

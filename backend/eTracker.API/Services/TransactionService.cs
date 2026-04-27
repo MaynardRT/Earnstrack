@@ -198,6 +198,7 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.BillerType)
                     .FirstOrDefault(),
+                ProductName = t.ProductName,
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
@@ -226,6 +227,7 @@ public class TransactionService : ITransactionService
                 ELoadingNetwork = transaction.ELoadingNetwork,
                 ELoadingPhoneNumber = transaction.ELoadingPhoneNumber,
                 BillerType = transaction.BillerType,
+                ProductName = transaction.ProductName,
                 CreatedAt = transaction.CreatedAt
             })
             .ToList();
@@ -322,6 +324,7 @@ public class TransactionService : ITransactionService
                     .Where(detail => detail.TransactionId == t.Id)
                     .Select(detail => detail.BillerType)
                     .FirstOrDefault(),
+                ProductName = t.ProductName,
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync();
@@ -350,6 +353,7 @@ public class TransactionService : ITransactionService
                 ELoadingNetwork = transaction.ELoadingNetwork,
                 ELoadingPhoneNumber = transaction.ELoadingPhoneNumber,
                 BillerType = transaction.BillerType,
+                ProductName = transaction.ProductName,
                 CreatedAt = transaction.CreatedAt
             })
             .ToList();

@@ -98,6 +98,8 @@ public class TransactionListDto
     public string? ELoadingPhoneNumber { get; set; }
     // Bills Payment fields
     public string? BillerType { get; set; }
+    // Products fields
+    public string? ProductName { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

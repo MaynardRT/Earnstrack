@@ -10,6 +10,7 @@ public class Transaction
     public decimal? TotalAmount { get; set; }
     public string Status { get; set; } = "Pending"; // "Pending", "Completed", "Failed"
     public string? FailureReason { get; set; }
+    public string? ProductName { get; set; } // Populated for Products transactions
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
