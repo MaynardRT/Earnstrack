@@ -29,36 +29,24 @@ Update the connection string in `appsettings.Development.json`:
 }
 ```
 
-#### 3. Create Database
+#### 3. Apply Migrations and Run
 
 ```bash
-dotnet ef database update
-```
-
-### 3. Backend Setup
-
-```bash
-cd backend/eTracker.API
-
-# Restore NuGet packages
-dotnet restore
-
-# Update your appsettings.Development.json with the correct connection string
-
-# Install Entity Framework CLI if not already installed
+# Install EF CLI tool (once per machine)
 dotnet tool install --global dotnet-ef
 
-# Create migrations (if needed)
-dotnet ef migrations add InitialPostgres
-
-# Apply migrations
+# Apply all pending EF migrations
+# (DatabaseInitializer also runs MigrateAsync at startup, so this step is optional for dev)
 dotnet ef database update
 
-# Run the API server
+# Start the API
 dotnet run
+# or for auto-reload on file changes:
+dotnet watch run
 ```
 
-Backend will start at `https://localhost:5001` or `http://localhost:5000`
+Backend starts at `http://localhost:5000` (HTTPS: `https://localhost:5001`).  
+Swagger UI is available at `/swagger`.
 
 ### 4. Frontend Setup
 
@@ -66,19 +54,18 @@ Backend will start at `https://localhost:5001` or `http://localhost:5000`
 cd frontend
 
 # Install dependencies
-npm install
+npm install          # Linux/Mac
+npm.cmd install      # Windows PowerShell (execution policy blocks npm.ps1)
 
-# Create .env.local file
-cp .env.example .env.local
-
-# Update .env.local with:
-# - Your API URL (http://localhost:5000/api)
+# Create .env.local with your local API URL
+# VITE_API_URL=http://localhost:5000/api
 
 # Start development server
-npm run dev
+npm run dev          # Linux/Mac
+npm.cmd run dev      # Windows PowerShell
 ```
 
-Frontend will start at `http://localhost:5173`
+Frontend starts at `http://localhost:5173`.
 
 ## Development Workflow
 
@@ -95,7 +82,8 @@ Frontend will start at `http://localhost:5173`
 
    ```bash
    cd frontend
-   npm run dev
+   npm run dev          # Linux/Mac
+   npm.cmd run dev      # Windows PowerShell
    ```
 
 3. Open browser to `http://localhost:5173`
@@ -206,11 +194,9 @@ curl -X GET "http://localhost:5000/api/transactions/summary" \
 
 ## Next Steps
 
-1. Add file upload handling for screenshots
-2. Expand service fee calculations
-3. Add email notifications if needed
-4. Setup CI/CD pipeline
-5. Review dependency vulnerability warnings regularly
+1. Review dependency vulnerability warnings regularly
+2. Add Vitest unit tests for frontend components
+3. Set up a CI/CD pipeline (see `documentation/CI_CD.md`)
 
 ## Documentation
 

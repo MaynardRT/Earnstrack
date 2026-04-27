@@ -66,11 +66,13 @@ export const useAuthStore = create<AuthState>((set: SetState<AuthState>) => ({
   },
 
   updateUser: (user: User) => {
+    // Keeps the stored user object in sync when the profile is edited (e.g., name, avatar).
     localStorage.setItem("user", JSON.stringify(user));
     set((state) => ({ ...state, user }));
   },
 
   clearAuth: () => {
+    // Remove all auth-related keys so no stale session survives a page refresh after logout.
     localStorage.removeItem("user");
     localStorage.removeItem("authToken");
     localStorage.removeItem(LAST_ACTIVITY_KEY);

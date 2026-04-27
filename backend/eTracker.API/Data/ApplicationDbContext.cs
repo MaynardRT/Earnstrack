@@ -12,7 +12,9 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
+    // Soft-delete archive — transactions older than 6 months are moved here by TransactionRetentionService.
     public DbSet<DeletedTransaction> DeletedTransactions { get; set; }
+    // Child detail tables — each row has a 1-to-1 FK back to Transactions.
     public DbSet<EWalletTransaction> EWalletTransactions { get; set; }
     public DbSet<PrintingTransaction> PrintingTransactions { get; set; }
     public DbSet<ELoadingTransaction> ELoadingTransactions { get; set; }

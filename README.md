@@ -1,6 +1,6 @@
-# Earnstrack - Complete E-Commerce Transaction Tracker
+# Earnstrack - Transaction Tracker
 
-A full-stack application for managing e-wallet and printing service transactions with comprehensive role-based access control and reporting.
+A full-stack application for tracking daily business transactions — E-Wallet (GCash/Maya), Printing/Scanning/Photocopy, E-Loading, Bills Payment, and product sales — with role-based access, earnings summaries, and receipt screenshot storage.
 
 ## 🔐 Test Credentials
 
@@ -70,18 +70,18 @@ The frontend will be available at `http://localhost:5173`
 
 ### Backend (.NET 10.0)
 
-- **Controllers**: API endpoints for Auth, Transactions, and Settings
-- **Services**: Business logic for authentication, transactions, and service fees
-- **Models**: Entity models for User, Transaction, EWalletTransaction, PrintingTransaction, ServiceFee, and AuditLog
-- **Data**: Entity Framework Core DbContext with PostgreSQL support
-- **DTOs**: Request/response data transfer objects
+- **Controllers**: `AuthController` (login, user management), `TransactionsController` (all transaction types, summaries, period filters), `SettingsController` (service fees, products, export, profile)
+- **Services**: `AuthService` (JWT generation, BCrypt), `TransactionService` (business logic, Philippine Standard Time boundaries), `ServiceFeeService` (fee lookup by type/network), `ProductService` (inventory + sell), `ReceiptStorageService` (base64 → disk), `TransactionRetentionService` (6-month auto-archive)
+- **Models**: `User`, `Transaction`, `EWalletTransaction`, `PrintingTransaction`, `ELoadingTransaction`, `BillsPaymentTransaction`, `ServiceFee`, `Product`, `DeletedTransaction`, `AuditLog`
+- **Data**: EF Core `ApplicationDbContext` + Npgsql; migrations in `Data/Migrations/`
+- **DTOs**: All request/response shapes in `DTOs/DTOs.cs`
 
-### Frontend (React + TypeScript)
+### Frontend (React 18 + TypeScript)
 
-- **Components**: Organized by feature (auth, dashboard, services, settings)
-- **Context**: Zustand stores for auth and theme management
-- **Services**: API client and service layer
-- **Styles**: Tailwind CSS with dark mode support
+- **Components**: Organized by feature — `auth/`, `dashboard/`, `services/` (EWallet, Printing, ELoading, BillsPayment, Products), `settings/`, `common/`
+- **Context**: Zustand stores — `authStore.ts` (JWT + 1-hour idle timeout), `themeStore.ts` (dark/light, persisted to localStorage)
+- **Services**: Axios instance with auto-JWT injection and 401 redirect (`api.ts`), typed wrappers per domain (`transactionService.ts`, `authService.ts`, `settingsService.ts`)
+- **Styles**: Tailwind CSS with class-based dark mode (`dark:` prefix)
 
 ## 📁 Project Structure
 
@@ -89,36 +89,42 @@ The frontend will be available at `http://localhost:5173`
 eTracker/
 ├── backend/
 │   └── eTracker.API/
-│       ├── Controllers/          # API endpoints
-│       ├── Models/              # Domain models
-│       ├── Services/            # Business logic
-│       ├── Data/                # DbContext and migrations
-│       ├── DTOs/                # Data transfer objects
-│       ├── Program.cs           # Application startup
-│       ├── appsettings.json     # Configuration
-│       └── eTracker.API.csproj  # Project file
+│       ├── Controllers/          # HTTP endpoints (Auth, Transactions, Settings)
+│       ├── Models/               # EF Core domain models
+│       ├── Services/             # Business logic (transactions, fees, products, receipts)
+│       ├── Data/                 # ApplicationDbContext + EF migrations
+│       ├── DTOs/                 # All request/response data shapes
+│       ├── Middleware/           # Custom ASP.NET middleware (if any)
+│       ├── Program.cs            # App startup, DI registration, middleware pipeline
+│       ├── appsettings.json      # Base configuration
+│       └── eTracker.API.csproj   # Project file
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/          # React components
-│   │   ├── context/             # Zustand stores
-│   │   ├── services/            # API clients
-│   │   ├── styles/              # CSS files
-│   │   ├── types/               # TypeScript types
-│   │   ├── App.tsx
-│   │   └── main.tsx
+│   │   ├── components/
+│   │   │   ├── auth/             # Login page
+│   │   │   ├── dashboard/        # Earnings summary + transaction table
+│   │   │   ├── services/         # EWallet, Printing, ELoading, BillsPayment, Products forms
+│   │   │   ├── settings/         # Service fees, user management, export
+│   │   │   └── common/           # Layout, Sidebar, Card, Button, Alert
+│   │   ├── context/              # Zustand stores (auth, theme)
+│   │   ├── services/             # Axios API wrappers
+│   │   ├── styles/               # Tailwind globals
+│   │   ├── types/                # Shared TypeScript interfaces
+│   │   ├── App.tsx               # Router + protected routes
+│   │   └── main.tsx              # Entry point
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── tsconfig.json
 │
 ├── database/
-│   └── schema.sql              # Database schema
+│   └── schema.sql                # Baseline PostgreSQL schema
 │
 └── documentation/
-    ├── DEVELOPMENT.md
-    ├── DEPLOYMENT.md
-    ├── CONFIGURATION.md
-    └── README.md
+    ├── DEVELOPMENT.md            # Local dev setup guide
+    ├── DEPLOYMENT.md             # Render + Supabase + GitHub Pages deployment
+    ├── CONFIGURATION.md          # appsettings / env var reference
+    └── README.md                 # Documentation index
 ```
 
 ## 🔐 Authentication
@@ -132,43 +138,55 @@ The application uses email/password authentication with JWT tokens for secure ac
 
 ## 📊 Features
 
-### Transaction Management
+### Transaction Types
 
-- E-Wallet transactions tracking
-- Printing service transactions
-- Real-time transaction reporting
-- Export transaction data
+| Type              | Details stored                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| **E-Wallet**      | Provider (GCash/Maya), method (CashIn/CashOut), amount bracket, reference number, screenshot |
+| **Printing**      | Service type (Printing/Scanning/Photocopy), paper size, color mode, quantity                 |
+| **E-Loading**     | Mobile network, phone number, screenshot                                                     |
+| **Bills Payment** | Biller name, bill amount, screenshot                                                         |
+| **Products**      | Item name (from product catalog), price                                                      |
+
+### Dashboard & Reporting
+
+- Earnings summary broken down by Daily / Weekly / Monthly (Philippine Standard Time boundaries)
+- Period-filtered transaction table with sortable columns
+- Status breakdown — Pending / Completed / Failed counts and totals
+- Per-transaction modal with full details and inline receipt screenshot
 
 ### Service Fee Management
 
-- Configure service fees by transaction type
-- Apply percentage-based fees
-- Audit trail for fee changes
+- Configurable fees per transaction type, provider, method, and amount bracket
+- Fees applied automatically at transaction creation time
 
-### User Management
+### Products / Inventory
 
-- Role-based access control (Admin/Seller)
-- User profile management
-- Activity logging
+- Product catalog with stock tracking
+- Sell button decrements stock and records a Products transaction
+
+### User Management (Admin only)
+
+- Role-based access control: `Admin` and `Seller`
+- Admin can create, deactivate, and manage all user accounts
 
 ### Settings
 
-- User preferences
-- Service configuration
-- Data export functionality
+- Light/dark mode (persisted to localStorage)
+- Service fee CRUD
+- Transaction data export to CSV
+- Profile picture upload
 
 ## 🛠️ Development
 
 ### Running Tests
 
 ```bash
-# Backend
-cd backend/eTracker.API
+# Backend unit tests
+cd backend/eTracker.API.Tests
 dotnet test
 
-# Frontend
-cd frontend
-npm test
+# Frontend (Vite does not include a test runner by default; add Vitest if needed)
 ```
 
 ### Building for Production
@@ -180,7 +198,8 @@ dotnet publish -c Release
 
 # Frontend
 cd frontend
-npm run build
+npm run build        # Linux/Mac
+npm.cmd run build    # Windows PowerShell (execution policy blocks npm.ps1)
 ```
 
 ## 🔧 Troubleshooting

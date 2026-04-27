@@ -110,5 +110,4 @@ psql "Host=YOUR_SUPABASE_HOST;Port=5432;Database=postgres;Username=postgres;Pass
 ## Ongoing Maintenance
 
 1. Keep .NET and npm dependencies updated
-2. Monitor the known AutoMapper vulnerability warning until that package is upgraded
-3. Rotate JWT and database secrets when needed
+2. Rotate JWT and database secrets when needed

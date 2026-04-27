@@ -63,6 +63,7 @@ export interface TransactionSummary {
   statusBreakdown?: TransactionStatusBreakdown | null;
 }
 
+// Transaction creation request shapes — one interface per transaction type
 export interface EWalletTransaction {
   provider: "GCash" | "Maya";
   method: "CashIn" | "CashOut";
@@ -93,6 +94,7 @@ export interface BillsPaymentTransaction {
   screenshotBase64?: string;
 }
 
+// Product Types — catalog items managed in Settings; selling decrements stockCount
 export interface Product {
   id: string;
   name: string;
