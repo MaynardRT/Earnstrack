@@ -288,10 +288,8 @@ export const EWalletForm: React.FC = () => {
               </div>
               {showsOverflowFee && (
                 <p className="mt-3 text-sm text-blue-800 dark:text-blue-100">
-                  Overflow band fee:{" "}
-                  <span className="font-semibold">
-                    ₱{serviceCharge.toFixed(2)}
-                  </span>
+                  Overflow fee applied:{" "}
+                  <span className="font-semibold">₱355.00</span>
                 </p>
               )}
             </div>
