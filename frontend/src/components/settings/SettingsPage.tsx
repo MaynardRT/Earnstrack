@@ -28,7 +28,14 @@ const KNOWN_SERVICE_TYPES = [
 ] as const;
 const KNOWN_EWALLET_PROVIDERS = ["GCash", "Maya"] as const;
 const KNOWN_EWALLET_METHODS = ["CashIn", "CashOut"] as const;
-const KNOWN_PRINTING_TYPES = ["Printing", "Scanning", "Photocopy"] as const;
+const KNOWN_PRINTING_TYPES = [
+  "Photocopy",
+  "Print",
+  "Rush ID Picture",
+  "Lamination",
+  "Photoprint",
+  "Scanning",
+] as const;
 
 const getKnownOptions = (currentValue: string, options: readonly string[]) => {
   if (!currentValue || options.includes(currentValue)) {

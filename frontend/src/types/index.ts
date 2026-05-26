@@ -74,7 +74,14 @@ export interface EWalletTransaction {
 }
 
 export interface PrintingTransaction {
-  serviceType: "Printing" | "Scanning" | "Photocopy";
+  serviceType:
+    | "Photocopy"
+    | "Print"
+    | "Rush ID Picture"
+    | "Lamination"
+    | "Photoprint"
+    | "Scanning"
+    | "Typing Job";
   paperSize: "Long" | "Short";
   color: "Grayscale" | "Colored";
   baseAmount: number;

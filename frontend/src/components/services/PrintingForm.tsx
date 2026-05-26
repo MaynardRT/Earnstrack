@@ -11,7 +11,7 @@ import {
 
 export const PrintingForm: React.FC = () => {
   const [formData, setFormData] = useState<PrintingTransaction>({
-    serviceType: "Printing",
+    serviceType: "Photocopy",
     paperSize: "Short",
     color: "Grayscale",
     baseAmount: 0,
@@ -31,7 +31,7 @@ export const PrintingForm: React.FC = () => {
       await transactionService.createPrintingTransaction(formData);
       setSuccess(true);
       setFormData({
-        serviceType: "Printing",
+        serviceType: "Photocopy",
         paperSize: "Short",
         color: "Grayscale",
         baseAmount: 0,
@@ -106,9 +106,12 @@ export const PrintingForm: React.FC = () => {
               aria-label="Service Type"
               required
             >
-              <option value="Printing">Printing</option>
-              <option value="Scanning">Scanning</option>
               <option value="Photocopy">Photocopy</option>
+              <option value="Print">Print</option>
+              <option value="Rush ID Picture">Rush ID Picture</option>
+              <option value="Lamination">Lamination</option>
+              <option value="Photoprint">Photoprint</option>
+              <option value="Scanning">Scanning</option>
             </select>
           </div>
 
