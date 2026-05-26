@@ -1,8 +1,11 @@
 export const getEWalletAmountBracket = (amount: number): string => {
   if (amount <= 0) return "";
 
-  const normalizedAmount = Math.min(amount, 10000);
-  const bandIndex = Math.floor((normalizedAmount - 1) / 500);
+  if (amount > 20000) {
+    return "20001+";
+  }
+
+  const bandIndex = Math.floor((amount - 1) / 500);
   const min = bandIndex * 500 + 1;
   const max = min + 499;
 
@@ -62,7 +65,7 @@ export const calculateEWalletServiceCharge = (amount: number): number => {
     if (amount >= min && amount <= max) return fee;
   }
 
-  // For amounts above 20,000, keep the existing fee cap and add the
+  // For amounts above 20,000, keep the existing max fee and add the
   // starting bracket fee for the additional total cost.
   return amount > 20000 ? 355 : 350;
 };

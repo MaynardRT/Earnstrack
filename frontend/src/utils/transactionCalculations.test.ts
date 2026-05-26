@@ -29,7 +29,8 @@ describe("transactionCalculations", () => {
     expect(getEWalletAmountBracket(1501)).toBe("1501-2000");
     expect(getEWalletAmountBracket(3500)).toBe("3001-3500");
     expect(getEWalletAmountBracket(10000)).toBe("9501-10000");
-    expect(getEWalletAmountBracket(10001)).toBe("9501-10000");
+    expect(getEWalletAmountBracket(10001)).toBe("10001-10500");
+    expect(getEWalletAmountBracket(20001)).toBe("20001+");
   });
 
   it("uses the starting fee bracket for amounts above 20,000", () => {
