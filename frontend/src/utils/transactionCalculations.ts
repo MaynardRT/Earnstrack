@@ -55,18 +55,38 @@ export const calculateEWalletServiceCharge = (amount: number): number => {
     [18501, 19000, 330],
     [19001, 19500, 340],
     [19501, 20000, 350],
+    [20001, 20500, 355],
+    [20501, 21000, 360],
+    [21001, 21500, 365],
+    [21501, 22000, 370],
+    [22001, 22500, 375],
+    [22501, 23000, 380],
+    [23001, 23500, 385],
+    [23501, 24000, 390],
+    [24001, 24500, 395],
+    [24501, 25000, 400],
+    [25001, 25500, 405],
+    [25501, 26000, 410],
+    [26001, 26500, 415],
+    [26501, 27000, 420],
+    [27001, 27500, 425],
+    [27501, 28000, 430],
+    [28001, 28500, 435],
+    [28501, 29000, 440],
+    [29001, 29500, 445],
+    [29501, 30000, 450],
   ];
 
   for (const [min, max, fee] of feeMatrix) {
     if (amount >= min && amount <= max) return fee;
   }
 
-  if (amount > 20000) {
-    const overflowBandIndex = Math.floor((amount - 1) / 500) - 39;
+  if (amount > 30000) {
+    const overflowBandIndex = Math.floor((amount - 1) / 500) - 59;
     return overflowBandIndex * 5;
   }
 
-  return 350;
+  return 450; // Default to max fee if something goes wrong, though this should never be hit with the current matrix
 };
 
 export const getEWalletServiceChargeRate = (amount: number): number =>
