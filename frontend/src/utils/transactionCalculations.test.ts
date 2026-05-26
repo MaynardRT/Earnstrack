@@ -32,6 +32,11 @@ describe("transactionCalculations", () => {
     expect(getEWalletAmountBracket(10001)).toBe("9501-10000");
   });
 
+  it("uses the starting fee bracket for amounts above 20,000", () => {
+    expect(calculateEWalletServiceCharge(20001)).toBe(355);
+    expect(calculateEWalletTotal(20001)).toBe(20356);
+  });
+
   it("keeps printing totals as unit price times quantity with a minimum quantity of one", () => {
     expect(normalizePrintingQuantity(0)).toBe(1);
     expect(calculatePrintingTotal(2.5, 4)).toBe(10);

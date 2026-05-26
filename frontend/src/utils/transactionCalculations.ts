@@ -57,11 +57,14 @@ export const calculateEWalletServiceCharge = (amount: number): number => {
     [19001, 19500, 340],
     [19501, 20000, 350],
   ];
+
   for (const [min, max, fee] of feeMatrix) {
     if (amount >= min && amount <= max) return fee;
   }
-  // If above 20,000, apply max fee
-  return 350;
+
+  // For amounts above 20,000, keep the existing fee cap and add the
+  // starting bracket fee for the additional total cost.
+  return amount > 20000 ? 355 : 350;
 };
 
 export const getEWalletServiceChargeRate = (amount: number): number =>

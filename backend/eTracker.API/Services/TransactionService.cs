@@ -781,7 +781,9 @@ public class TransactionService : ITransactionService
             if (baseAmount >= min && baseAmount <= max)
                 return fee;
         }
-        // If above 20,000, apply max fee
-        return 350m;
+
+        // For amounts above 20,000, keep the cap fee and add the starting
+        // bracket fee for the additional total cost.
+        return baseAmount > 20000m ? 355m : 350m;
     }
 }
