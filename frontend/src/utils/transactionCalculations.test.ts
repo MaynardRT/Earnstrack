@@ -15,11 +15,11 @@ describe("transactionCalculations", () => {
     expect(calculateEWalletServiceCharge(1001)).toBe(15);
     expect(calculateEWalletServiceCharge(1500)).toBe(15);
     expect(calculateEWalletServiceCharge(1501)).toBe(20);
-    expect(calculateEWalletServiceCharge(9500)).toBe(95);
-    expect(calculateEWalletServiceCharge(9501)).toBe(100);
-    expect(calculateEWalletServiceCharge(10000)).toBe(100);
-    expect(calculateEWalletServiceCharge(10001)).toBe(100);
-    expect(calculateEWalletTotal(10000)).toBe(10100);
+    expect(calculateEWalletServiceCharge(9500)).toBe(140);
+    expect(calculateEWalletServiceCharge(9501)).toBe(150);
+    expect(calculateEWalletServiceCharge(10000)).toBe(150);
+    expect(calculateEWalletServiceCharge(10001)).toBe(160);
+    expect(calculateEWalletTotal(10000)).toBe(10150);
   });
 
   it("returns the current amount brackets used by the form", () => {
