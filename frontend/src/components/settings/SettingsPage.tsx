@@ -35,6 +35,7 @@ const KNOWN_PRINTING_TYPES = [
   "Lamination",
   "Photoprint",
   "Scanning",
+  "Typing Job",
 ] as const;
 
 const getKnownOptions = (currentValue: string, options: readonly string[]) => {

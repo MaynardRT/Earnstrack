@@ -112,6 +112,7 @@ export const PrintingForm: React.FC = () => {
               <option value="Lamination">Lamination</option>
               <option value="Photoprint">Photoprint</option>
               <option value="Scanning">Scanning</option>
+              <option value="Typing Job">Typing Job</option>
             </select>
           </div>
 
