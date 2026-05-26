@@ -782,8 +782,12 @@ public class TransactionService : ITransactionService
                 return fee;
         }
 
-        // For amounts above 20,000, keep the cap fee and add the starting
-        // bracket fee for the additional total cost.
-        return baseAmount > 20000m ? 355m : 350m;
+        if (baseAmount > 20000m)
+        {
+            var overflowBandIndex = (int)Math.Floor((double)((baseAmount - 1m) / 500m)) - 39;
+            return overflowBandIndex * 5m;
+        }
+
+        return 350m;
     }
 }

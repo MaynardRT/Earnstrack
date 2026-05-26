@@ -30,12 +30,17 @@ describe("transactionCalculations", () => {
     expect(getEWalletAmountBracket(3500)).toBe("3001-3500");
     expect(getEWalletAmountBracket(10000)).toBe("9501-10000");
     expect(getEWalletAmountBracket(10001)).toBe("10001-10500");
-    expect(getEWalletAmountBracket(20001)).toBe("20001+");
+    expect(getEWalletAmountBracket(20001)).toBe("20001-20500");
+    expect(getEWalletAmountBracket(20501)).toBe("20501-21000");
   });
 
-  it("uses the starting fee bracket for amounts above 20,000", () => {
-    expect(calculateEWalletServiceCharge(20001)).toBe(355);
-    expect(calculateEWalletTotal(20001)).toBe(20356);
+  it("uses the overflow fee bands for amounts above 20,000", () => {
+    expect(calculateEWalletServiceCharge(20001)).toBe(5);
+    expect(calculateEWalletServiceCharge(20501)).toBe(10);
+    expect(calculateEWalletServiceCharge(21001)).toBe(15);
+    expect(calculateEWalletTotal(20001)).toBe(20006);
+    expect(calculateEWalletTotal(20501)).toBe(20511);
+    expect(calculateEWalletTotal(21001)).toBe(21016);
   });
 
   it("keeps printing totals as unit price times quantity with a minimum quantity of one", () => {

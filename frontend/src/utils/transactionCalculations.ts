@@ -1,10 +1,6 @@
 export const getEWalletAmountBracket = (amount: number): string => {
   if (amount <= 0) return "";
 
-  if (amount > 20000) {
-    return "20001+";
-  }
-
   const bandIndex = Math.floor((amount - 1) / 500);
   const min = bandIndex * 500 + 1;
   const max = min + 499;
@@ -13,7 +9,7 @@ export const getEWalletAmountBracket = (amount: number): string => {
 };
 
 /**
- * Returns the service charge for E-Wallet transactions based on the fixed fee matrix (₱1–₱20,000).
+ * Returns the service charge for E-Wallet transactions based on the fixed fee matrix.
  */
 export const calculateEWalletServiceCharge = (amount: number): number => {
   if (amount <= 0) return 0;
@@ -65,9 +61,12 @@ export const calculateEWalletServiceCharge = (amount: number): number => {
     if (amount >= min && amount <= max) return fee;
   }
 
-  // For amounts above 20,000, keep the existing max fee and add the
-  // starting bracket fee for the additional total cost.
-  return amount > 20000 ? 355 : 350;
+  if (amount > 20000) {
+    const overflowBandIndex = Math.floor((amount - 1) / 500) - 39;
+    return overflowBandIndex * 5;
+  }
+
+  return 350;
 };
 
 export const getEWalletServiceChargeRate = (amount: number): number =>
