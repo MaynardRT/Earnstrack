@@ -118,7 +118,6 @@ export const EWalletForm: React.FC = () => {
   const serviceCharge = calculateEWalletServiceCharge(formData.baseAmount);
   const totalAmount = calculateEWalletTotal(formData.baseAmount);
   const activeBracketValue = getEWalletAmountBracket(formData.baseAmount);
-  const showsOverflowFee = formData.baseAmount > 20000;
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
@@ -244,8 +243,7 @@ export const EWalletForm: React.FC = () => {
                   required
                 />
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  Supported amount range: P1.00 and above. Amounts above P20,000
-                  use the overflow fee rule.
+                  Supported amount range: P1.00 and above.
                 </p>
               </div>
 
@@ -286,12 +284,6 @@ export const EWalletForm: React.FC = () => {
                   </p>
                 </div>
               </div>
-              {showsOverflowFee && (
-                <p className="mt-3 text-sm text-blue-800 dark:text-blue-100">
-                  Overflow fee applied:{" "}
-                  <span className="font-semibold">₱355.00</span>
-                </p>
-              )}
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/60">
