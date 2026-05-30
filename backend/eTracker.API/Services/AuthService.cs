@@ -22,7 +22,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public async Task<string> GenerateJwtToken(User user)
+    public Task<string> GenerateJwtToken(User user)
     {
         // Emit both framework-standard and legacy role claims so authorization keeps working across older code paths.
         var jwtSettings = _configuration.GetSection("JwtSettings");
@@ -46,7 +46,7 @@ public class AuthService : IAuthService
             signingCredentials: credentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
     }
 
     public string HashPassword(string password)

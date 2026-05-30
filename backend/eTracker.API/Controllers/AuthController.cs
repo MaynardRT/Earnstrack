@@ -31,16 +31,29 @@ public class AuthController : ControllerBase
 
         try
         {
-            // Find user by email
+            // Find user by email - only select needed fields
             var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+            var user = await _context.Users
+                .Where(u => u.Email.ToLower() == normalizedEmail)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.Email,
+                    u.FullName,
+                    u.Role,
+                    u.ProfilePicture,
+                    u.CreatedAt,
+                    u.PasswordHash,
+                    u.IsActive
+                })
+                .FirstOrDefaultAsync();
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
             {
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
-            // Verify password
+            // Verify password (this is intentionally slow for security)
             if (!_authService.VerifyPassword(request.Password, user.PasswordHash))
             {
                 return Unauthorized(new { message = "Invalid email or password" });
@@ -53,7 +66,15 @@ public class AuthController : ControllerBase
             }
 
             // Generate JWT token
-            var jwtToken = await _authService.GenerateJwtToken(user);
+            var jwtToken = await _authService.GenerateJwtToken(new User
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                Role = user.Role,
+                ProfilePicture = user.ProfilePicture,
+                CreatedAt = user.CreatedAt
+            });
 
             return Ok(new AuthResponseDto
             {
