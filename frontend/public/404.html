@@ -4,28 +4,15 @@
     <meta charset="utf-8" />
     <title>Single Page App</title>
     <script type="text/javascript">
-      // Redirect SPA 404s to the root index.html with the path encoded as a query string
-      var l = window.location;
-      l.replace(
-        l.protocol +
-          "//" +
-          l.host +
-          "/Earnstrack/?p=" +
-          l.pathname
-            .slice(1)
-            .split("/")
-            .slice(0, -1)
-            .join("/")
-            .replace(/&/g, "~and~") +
-          "#" +
-          (l.hash.slice(1) ||
-            l.pathname
-              .slice(1)
-              .split("/")
-              .slice(-1)
-              .join("/")
-              .replace(/&/g, "~and~")),
-      );
+      // Redirect SPA 404s to the root index.html
+      // This is the standard GitHub Pages workaround for SPA routing
+      (function () {
+        var redirect = window.location.pathname;
+        if (redirect !== "/Earnstrack/" && redirect !== "/Earnstrack") {
+          sessionStorage.redirect = redirect;
+        }
+        window.location.href = "/Earnstrack/";
+      })();
     </script>
   </head>
   <body></body>
