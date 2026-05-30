@@ -26,3 +26,6 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
+
+// For GitHub Pages deployment:
+// Set VITE_APP_BASE_PATH=/Earnstrack/ in your build environment or add to .env.production

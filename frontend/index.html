@@ -9,6 +9,16 @@
       content="Earnstrack - Track and manage your business earnings efficiently"
     />
     <title>Earnstrack - Business Earnings Management</title>
+    <script type="text/javascript">
+      // Handle redirect from 404.html for GitHub Pages SPA routing
+      (function () {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
