@@ -30,7 +30,7 @@ export const Alert: React.FC<AlertProps> = ({
 
   return (
     <div
-      className={`border rounded-lg p-4 pb-6 flex items-start space-x-3 ${styles[type]}`}
+      className={`border rounded-lg p-4 pb-10 flex items-start space-x-3 ${styles[type]}`}
     >
       {icons[type]}
       <div className="flex-1">
