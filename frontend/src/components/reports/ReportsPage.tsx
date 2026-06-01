@@ -124,7 +124,9 @@ export const ReportsPage: React.FC = () => {
                         borderRadius: "0.5rem",
                         color: "#F3F4F6",
                       }}
-                      formatter={(value) => `₱${Number(value).toFixed(2)}`}
+                      formatter={(value: number) =>
+                        `₱${Number(value).toFixed(2)}`
+                      }
                     />
                     <Legend />
                     <Bar
@@ -136,7 +138,7 @@ export const ReportsPage: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-300 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400">
                   No data available
                 </div>
               )}
@@ -158,7 +160,7 @@ export const ReportsPage: React.FC = () => {
                       cy="50%"
                       outerRadius={80}
                       label={(entry) =>
-                        `${entry.name}: ₱${entry.value.toFixed(0)}`
+                        `${entry.name}: ₱${Number(entry.value).toFixed(0)}`
                       }
                     >
                       {serviceSales.map((entry) => (
@@ -172,7 +174,9 @@ export const ReportsPage: React.FC = () => {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value) => `₱${Number(value).toFixed(2)}`}
+                      formatter={(value: number) =>
+                        `₱${Number(value).toFixed(2)}`
+                      }
                       contentStyle={{
                         backgroundColor: "#1F2937",
                         border: "1px solid #374151",
@@ -183,7 +187,7 @@ export const ReportsPage: React.FC = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-300 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400">
                   No data available
                 </div>
               )}
