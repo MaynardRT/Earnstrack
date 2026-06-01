@@ -34,16 +34,16 @@ public class ReportsController : ControllerBase
             // Fetch transactions into memory to avoid PostgreSQL LINQ translation issues
             var transactions = await _context.Transactions
                 .Where(t => t.UserId == userIdGuid && t.CreatedAt >= startDate && t.Status == "Completed")
-                .Select(t => new { t.CreatedAt, t.TotalAmount, t.Amount })
+                .Select(t => new { t.CreatedAt, t.TransactionType, t.TotalAmount, t.Amount, t.ServiceCharge })
                 .ToListAsync();
 
-            // Group in-memory by date
+            // Group in-memory by date - calculate sales based on transaction type
             var dailySales = transactions
                 .GroupBy(t => t.CreatedAt.Date)
                 .Select(g => new
                 {
                     date = g.Key.ToString("MMM dd"),
-                    sales = g.Sum(t => t.TotalAmount ?? t.Amount),
+                    sales = g.Sum(t => t.TransactionType == "EWallet" ? (t.ServiceCharge ?? 0) : (t.TotalAmount ?? t.Amount)),
                     count = g.Count()
                 })
                 .OrderBy(x => x.date)
@@ -73,16 +73,16 @@ public class ReportsController : ControllerBase
             // Fetch transactions into memory to avoid LINQ translation issues
             var transactions = await _context.Transactions
                 .Where(t => t.UserId == userIdGuid && t.Status == "Completed")
-                .Select(t => new { t.TransactionType, t.TotalAmount, t.Amount })
+                .Select(t => new { t.TransactionType, t.TotalAmount, t.Amount, t.ServiceCharge })
                 .ToListAsync();
 
-            // Group in-memory by service type
+            // Group in-memory by service type - calculate value based on transaction type
             var serviceSales = transactions
                 .GroupBy(t => t.TransactionType)
                 .Select(g => new
                 {
                     name = g.Key,
-                    value = g.Sum(t => t.TotalAmount ?? t.Amount),
+                    value = g.Sum(t => g.Key == "EWallet" ? (t.ServiceCharge ?? 0) : (t.TotalAmount ?? t.Amount)),
                     count = g.Count()
                 })
                 .OrderByDescending(x => x.value)
@@ -114,10 +114,11 @@ public class ReportsController : ControllerBase
             // Fetch into memory to avoid database translation issues
             var completedTransactions = await _context.Transactions
                 .Where(t => t.UserId == userIdGuid && t.CreatedAt >= startDate && t.Status == "Completed")
-                .Select(t => new { t.TotalAmount, t.Amount })
+                .Select(t => new { t.TransactionType, t.TotalAmount, t.Amount, t.ServiceCharge })
                 .ToListAsync();
 
-            var totalSales = completedTransactions.Sum(t => t.TotalAmount ?? t.Amount);
+            // Calculate total sales based on transaction type
+            var totalSales = completedTransactions.Sum(t => t.TransactionType == "EWallet" ? (t.ServiceCharge ?? 0) : (t.TotalAmount ?? t.Amount));
             var totalTransactions = completedTransactions.Count;
             var averageTransaction = totalTransactions > 0 ? totalSales / totalTransactions : 0;
 
