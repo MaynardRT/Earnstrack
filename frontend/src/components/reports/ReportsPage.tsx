@@ -73,6 +73,7 @@ export const ReportsPage: React.FC = () => {
               Date Range:
             </label>
             <select
+              title="Days Range"
               value={daysRange}
               onChange={(e) => setDaysRange(Number(e.target.value))}
               className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
@@ -159,7 +160,7 @@ export const ReportsPage: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      label={(entry) =>
+                      label={(entry: any) =>
                         `${entry.name}: ₱${Number(entry.value).toFixed(0)}`
                       }
                     >
