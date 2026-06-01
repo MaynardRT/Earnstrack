@@ -29,11 +29,16 @@ public class ReportsController : ControllerBase
                 return Unauthorized();
             }
 
-            var startDate = DateTime.UtcNow.AddDays(-days).Date;
+            var startDate = DateTime.UtcNow.AddDays(-days);
 
-            // Get transactions grouped by day
-            var dailySales = await _context.Transactions
+            // Fetch transactions into memory to avoid PostgreSQL LINQ translation issues
+            var transactions = await _context.Transactions
                 .Where(t => t.UserId == userIdGuid && t.CreatedAt >= startDate && t.Status == "Completed")
+                .Select(t => new { t.CreatedAt, t.TotalAmount, t.Amount })
+                .ToListAsync();
+
+            // Group in-memory by date
+            var dailySales = transactions
                 .GroupBy(t => t.CreatedAt.Date)
                 .Select(g => new
                 {
@@ -42,14 +47,15 @@ public class ReportsController : ControllerBase
                     count = g.Count()
                 })
                 .OrderBy(x => x.date)
-                .ToListAsync();
+                .ToList();
 
             return Ok(dailySales);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching daily sales: {ex.Message}");
-            return StatusCode(500, new { message = "Failed to fetch daily sales data" });
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Failed to fetch daily sales data", error = ex.Message });
         }
     }
 
@@ -64,9 +70,14 @@ public class ReportsController : ControllerBase
                 return Unauthorized();
             }
 
-            // Get transactions grouped by service type
-            var serviceSales = await _context.Transactions
+            // Fetch transactions into memory to avoid LINQ translation issues
+            var transactions = await _context.Transactions
                 .Where(t => t.UserId == userIdGuid && t.Status == "Completed")
+                .Select(t => new { t.TransactionType, t.TotalAmount, t.Amount })
+                .ToListAsync();
+
+            // Group in-memory by service type
+            var serviceSales = transactions
                 .GroupBy(t => t.TransactionType)
                 .Select(g => new
                 {
@@ -75,14 +86,15 @@ public class ReportsController : ControllerBase
                     count = g.Count()
                 })
                 .OrderByDescending(x => x.value)
-                .ToListAsync();
+                .ToList();
 
             return Ok(serviceSales);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching service sales: {ex.Message}");
-            return StatusCode(500, new { message = "Failed to fetch service sales data" });
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Failed to fetch service sales data", error = ex.Message });
         }
     }
 
@@ -97,10 +109,12 @@ public class ReportsController : ControllerBase
                 return Unauthorized();
             }
 
-            var startDate = DateTime.UtcNow.AddDays(-days).Date;
+            var startDate = DateTime.UtcNow.AddDays(-days);
 
+            // Fetch into memory to avoid database translation issues
             var completedTransactions = await _context.Transactions
                 .Where(t => t.UserId == userIdGuid && t.CreatedAt >= startDate && t.Status == "Completed")
+                .Select(t => new { t.TotalAmount, t.Amount })
                 .ToListAsync();
 
             var totalSales = completedTransactions.Sum(t => t.TotalAmount ?? t.Amount);
@@ -118,7 +132,8 @@ public class ReportsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching summary: {ex.Message}");
-            return StatusCode(500, new { message = "Failed to fetch summary data" });
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Failed to fetch summary data", error = ex.Message });
         }
     }
 }
