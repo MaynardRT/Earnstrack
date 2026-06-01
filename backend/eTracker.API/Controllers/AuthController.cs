@@ -31,7 +31,7 @@ public class AuthController : ControllerBase
 
         try
         {
-            // Find user by email - only select needed fields
+            // Find user by email - only select needed fields to minimize memory and transfer
             var normalizedEmail = request.Email.Trim().ToLowerInvariant();
             var user = await _context.Users
                 .Where(u => u.Email.ToLower() == normalizedEmail)
@@ -41,8 +41,6 @@ public class AuthController : ControllerBase
                     u.Email,
                     u.FullName,
                     u.Role,
-                    u.ProfilePicture,
-                    u.CreatedAt,
                     u.PasswordHash,
                     u.IsActive
                 })
@@ -72,9 +70,13 @@ public class AuthController : ControllerBase
                 Email = user.Email,
                 FullName = user.FullName,
                 Role = user.Role,
-                ProfilePicture = user.ProfilePicture,
-                CreatedAt = user.CreatedAt
+                CreatedAt = DateTime.UtcNow
             });
+
+            // Set no-cache on auth endpoints to ensure fresh tokens
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
 
             return Ok(new AuthResponseDto
             {
@@ -85,7 +87,6 @@ public class AuthController : ControllerBase
                     Email = user.Email,
                     FullName = user.FullName,
                     Role = user.Role,
-                    ProfilePicture = user.ProfilePicture,
                     CreatedAt = user.CreatedAt
                 }
             });
