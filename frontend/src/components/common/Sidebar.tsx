@@ -10,6 +10,7 @@ import {
   Zap,
   Receipt,
   ShoppingBag,
+  BarChart3,
 } from "lucide-react";
 import { useAuthStore } from "../../context/authStore";
 import { authService } from "../../services/authService";
@@ -45,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: Zap, label: "E-Loading", path: "/services/eloading" },
     { icon: Receipt, label: "Bills Payment", path: "/services/bills-payment" },
     { icon: ShoppingBag, label: "Products", path: "/services/products" },
+    { icon: BarChart3, label: "Reports", path: "/reports" },
     ...(user?.role === "Admin"
       ? [{ icon: Settings, label: "Settings", path: "/settings" }]
       : []),

@@ -17,6 +17,7 @@ import { ELoadingForm } from "./components/services/ELoadingForm";
 import { BillsPaymentForm } from "./components/services/BillsPaymentForm";
 import { ProductsPage } from "./components/services/ProductsPage";
 import { SettingsPage } from "./components/settings/SettingsPage";
+import { ReportsPage } from "./components/reports/ReportsPage";
 
 const LAST_ACTIVITY_KEY = "lastActivityAt";
 const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
@@ -204,6 +205,17 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <ProductsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ReportsPage />
               </MainLayout>
             </ProtectedRoute>
           }
