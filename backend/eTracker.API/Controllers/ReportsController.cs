@@ -31,8 +31,9 @@ public class ReportsController : ControllerBase
 
             var startDate = DateTime.UtcNow.AddDays(-days).Date;
 
-            // Get transactions grouped by day
+            // Get transactions grouped by day using AsNoTracking for read-only query
             var dailySales = await _context.Transactions
+                .AsNoTracking()
                 .Where(t => t.UserId == userIdGuid && t.CreatedAt >= startDate && t.Status == "Completed")
                 .GroupBy(t => t.CreatedAt.Date)
                 .Select(g => new
@@ -49,7 +50,8 @@ public class ReportsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching daily sales: {ex.Message}");
-            return StatusCode(500, new { message = "Failed to fetch daily sales data" });
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Failed to fetch daily sales data", error = ex.Message });
         }
     }
 
@@ -64,8 +66,9 @@ public class ReportsController : ControllerBase
                 return Unauthorized();
             }
 
-            // Get transactions grouped by service type
+            // Get transactions grouped by service type using AsNoTracking for read-only query
             var serviceSales = await _context.Transactions
+                .AsNoTracking()
                 .Where(t => t.UserId == userIdGuid && t.Status == "Completed")
                 .GroupBy(t => t.TransactionType)
                 .Select(g => new
@@ -82,7 +85,8 @@ public class ReportsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching service sales: {ex.Message}");
-            return StatusCode(500, new { message = "Failed to fetch service sales data" });
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Failed to fetch service sales data", error = ex.Message });
         }
     }
 
@@ -100,6 +104,7 @@ public class ReportsController : ControllerBase
             var startDate = DateTime.UtcNow.AddDays(-days).Date;
 
             var completedTransactions = await _context.Transactions
+                .AsNoTracking()
                 .Where(t => t.UserId == userIdGuid && t.CreatedAt >= startDate && t.Status == "Completed")
                 .ToListAsync();
 
@@ -118,7 +123,8 @@ public class ReportsController : ControllerBase
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching summary: {ex.Message}");
-            return StatusCode(500, new { message = "Failed to fetch summary data" });
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Failed to fetch summary data", error = ex.Message });
         }
     }
 }
