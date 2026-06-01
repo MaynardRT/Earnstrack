@@ -42,7 +42,8 @@ public class AuthController : ControllerBase
                     u.FullName,
                     u.Role,
                     u.PasswordHash,
-                    u.IsActive
+                    u.IsActive,
+                    u.CreatedAt
                 })
                 .FirstOrDefaultAsync();
 
@@ -70,7 +71,7 @@ public class AuthController : ControllerBase
                 Email = user.Email,
                 FullName = user.FullName,
                 Role = user.Role,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = user.CreatedAt
             });
 
             // Set no-cache on auth endpoints to ensure fresh tokens
