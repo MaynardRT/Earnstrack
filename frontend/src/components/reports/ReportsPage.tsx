@@ -44,6 +44,14 @@ export const ReportsPage: React.FC = () => {
         setServiceSales(data.serviceSales);
       } catch (err) {
         console.error("Failed to load reports:", err);
+        // Log detailed error information
+        if (err instanceof Error) {
+          console.error("Error message:", err.message);
+        }
+        if (typeof err === "object" && err !== null && "response" in err) {
+          console.error("Response data:", (err as any).response?.data);
+          console.error("Response status:", (err as any).response?.status);
+        }
         setError("Failed to load reports. Please try again.");
       } finally {
         setIsLoading(false);
