@@ -63,6 +63,15 @@ export const ELoadingForm: React.FC = () => {
     }
   };
 
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setFormData((prev) => ({
+      ...prev,
+      screenshotBase64: undefined,
+      screenshotFileName: undefined,
+    }));
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -74,9 +83,25 @@ export const ELoadingForm: React.FC = () => {
     }));
   };
 
+  // Trims on blur for immediate visual feedback. handleSubmit trims again
+  // as the guaranteed fallback, so this is UX polish, not the safety net.
+  const handlePhoneNumberBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const trimmed = e.target.value.trim();
+    if (trimmed !== formData.phoneNumber) {
+      setFormData((prev) => ({
+        ...prev,
+        phoneNumber: trimmed,
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.phoneNumber.trim()) {
+
+    // Trim here as the source of truth, regardless of whether onBlur fired
+    const trimmedPhoneNumber = formData.phoneNumber.trim();
+
+    if (!trimmedPhoneNumber) {
       setError("Phone number is required");
       return;
     }
@@ -85,11 +110,16 @@ export const ELoadingForm: React.FC = () => {
       return;
     }
 
+    const payload: ELoadingTransaction = {
+      ...formData,
+      phoneNumber: trimmedPhoneNumber,
+    };
+
     setIsLoading(true);
     setError(null);
 
     try {
-      await transactionService.createELoadingTransaction(formData);
+      await transactionService.createELoadingTransaction(payload);
       setSuccess(true);
       setFormData({ mobileNetwork: "Globe", phoneNumber: "", baseAmount: 0 });
       setImagePreview(null);
@@ -157,12 +187,7 @@ export const ELoadingForm: React.FC = () => {
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}
-              onBlur={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  phoneNumber: e.target.value.trim(),
-                }))
-              }
+              onBlur={handlePhoneNumberBlur}
               disabled={isLoading}
               placeholder="e.g. 09171234567"
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
@@ -208,6 +233,14 @@ export const ELoadingForm: React.FC = () => {
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Preview:
                 </p>
+                {formData.screenshotFileName && (
+                  <p
+                    className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate max-w-xs"
+                    title={formData.screenshotFileName}
+                  >
+                    {formData.screenshotFileName}
+                  </p>
+                )}
                 <img
                   src={imagePreview}
                   alt="Receipt preview"
@@ -215,13 +248,7 @@ export const ELoadingForm: React.FC = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setFormData((prev) => ({
-                      ...prev,
-                      screenshotBase64: undefined,
-                    }));
-                  }}
+                  onClick={handleRemoveImage}
                   className="mt-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                 >
                   Remove image

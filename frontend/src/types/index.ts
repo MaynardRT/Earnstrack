@@ -71,6 +71,7 @@ export interface EWalletTransaction {
   referenceNumber: string;
   baseAmount: number;
   screenshotBase64?: string;
+  screenshotFileName?: string;
 }
 
 export interface PrintingTransaction {
@@ -93,6 +94,7 @@ export interface ELoadingTransaction {
   phoneNumber: string;
   baseAmount: number;
   screenshotBase64?: string;
+  screenshotFileName?: string;
 }
 
 export interface BillsPaymentTransaction {

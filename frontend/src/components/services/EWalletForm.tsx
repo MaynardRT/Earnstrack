@@ -41,8 +41,22 @@ export const EWalletForm: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
+    // Trim here as the source of truth, regardless of whether onBlur fired
+    const trimmedReferenceNumber = formData.referenceNumber.trim();
+
+    if (!trimmedReferenceNumber) {
+      setError("Reference number cannot be empty or just spaces");
+      setIsLoading(false);
+      return;
+    }
+
+    const payload: EWalletTransaction = {
+      ...formData,
+      referenceNumber: trimmedReferenceNumber,
+    };
+
     try {
-      await transactionService.createEWalletTransaction(formData);
+      await transactionService.createEWalletTransaction(payload);
       setSuccess(true);
       setFormData({
         provider: "GCash",
@@ -83,6 +97,18 @@ export const EWalletForm: React.FC = () => {
     });
   };
 
+  // Trims on blur for immediate visual feedback. handleSubmit trims again
+  // as the guaranteed fallback, so this is UX polish, not the safety net.
+  const handleReferenceNumberBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const trimmed = e.target.value.trim();
+    if (trimmed !== formData.referenceNumber) {
+      setFormData((prev) => ({
+        ...prev,
+        referenceNumber: trimmed,
+      }));
+    }
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     const inputEl = e.target; // keep a reference for use inside the async callback
@@ -115,6 +141,15 @@ export const EWalletForm: React.FC = () => {
       reader.onerror = () => setError("Failed to read image file");
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setFormData((prev) => ({
+      ...prev,
+      screenshotBase64: undefined,
+      screenshotFileName: undefined,
+    }));
   };
 
   const serviceCharge = calculateEWalletServiceCharge(formData.baseAmount);
@@ -216,12 +251,7 @@ export const EWalletForm: React.FC = () => {
                   name="referenceNumber"
                   value={formData.referenceNumber}
                   onChange={handleChange}
-                  onBlur={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      referenceNumber: e.target.value.trim(),
-                    }))
-                  }
+                  onBlur={handleReferenceNumberBlur}
                   placeholder="Enter reference number"
                   disabled={isLoading}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
@@ -368,18 +398,20 @@ export const EWalletForm: React.FC = () => {
                   </p>
                   <button
                     type="button"
-                    onClick={() => {
-                      setImagePreview(null);
-                      setFormData((prev) => ({
-                        ...prev,
-                        screenshotBase64: undefined,
-                      }));
-                    }}
+                    onClick={handleRemoveImage}
                     className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
                     Remove Image
                   </button>
                 </div>
+                {formData.screenshotFileName && (
+                  <p
+                    className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate"
+                    title={formData.screenshotFileName}
+                  >
+                    {formData.screenshotFileName}
+                  </p>
+                )}
                 <img
                   src={imagePreview}
                   alt="Receipt preview"
