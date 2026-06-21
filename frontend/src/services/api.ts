@@ -1,14 +1,14 @@
 import axios from "axios";
 
 const getDefaultApiBaseUrl = (): string => {
-  if (typeof window === "undefined") {
-    return "http://localhost:5000/api";
-  }
+  // if (typeof window === "undefined") {
+  //   return "http://localhost:5000/api";
+  // }
 
-  const { hostname } = window.location;
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return "http://localhost:5000/api";
-  }
+  // const { hostname } = window.location;
+  // if (hostname === "localhost" || hostname === "127.0.0.1") {
+  //   return "http://localhost:5000/api";
+  // }
 
   // GitHub Pages cannot reach a localhost API, so production falls back to the deployed Render backend.
   return "https://earnstrack.onrender.com/api";

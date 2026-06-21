@@ -6,6 +6,8 @@ import { Card } from "../common/Card";
 import { Button } from "../common/Button";
 import { Alert } from "../common/Alert";
 import { BrandLogo } from "../common/BrandLogo";
+import { useThemeStore } from "../../context/themeStore";
+import { Moon, Sun } from "lucide-react";
 
 export const BasicLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ export const BasicLoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setAuth } = useAuthStore();
+  const { isDarkMode, toggleTheme } = useThemeStore();
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -63,6 +66,17 @@ export const BasicLoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? (
+              <Sun size={20} className="text-yellow-500" />
+            ) : (
+              <Moon size={20} className="text-gray-600" />
+            )}
+          </button>
           <BrandLogo className="mx-auto mb-4 h-20 w-auto" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Earnstrack
