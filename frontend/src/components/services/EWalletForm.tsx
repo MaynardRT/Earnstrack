@@ -109,8 +109,6 @@ export const EWalletForm: React.FC = () => {
         }));
         setImagePreview(base64String);
         setError(null);
-
-        // Clear the input so selecting the same file again still triggers onChange
         inputEl.value = "";
       };
       reader.onerror = () => {
@@ -374,7 +372,7 @@ export const EWalletForm: React.FC = () => {
                     }}
                     className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
-                    Remove
+                    Remove Image
                   </button>
                 </div>
                 <img
