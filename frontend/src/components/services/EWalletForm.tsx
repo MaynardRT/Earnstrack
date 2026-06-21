@@ -106,14 +106,13 @@ export const EWalletForm: React.FC = () => {
         setFormData((prev) => ({
           ...prev,
           screenshotBase64: base64String,
+          screenshotFileName: file.name,
         }));
         setImagePreview(base64String);
         setError(null);
         inputEl.value = "";
       };
-      reader.onerror = () => {
-        setError("Failed to read image file");
-      };
+      reader.onerror = () => setError("Failed to read image file");
       reader.readAsDataURL(file);
     }
   };

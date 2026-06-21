@@ -49,7 +49,11 @@ export const ELoadingForm: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setFormData((prev) => ({ ...prev, screenshotBase64: base64String }));
+        setFormData((prev) => ({
+          ...prev,
+          screenshotBase64: base64String,
+          screenshotFileName: file.name,
+        }));
         setImagePreview(base64String);
         setError(null);
         inputEl.value = ""; // allow re-selecting the same file later
