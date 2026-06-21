@@ -85,6 +85,8 @@ export const EWalletForm: React.FC = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const inputEl = e.target; // keep a reference for use inside the async callback
+
     if (file) {
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
@@ -107,6 +109,9 @@ export const EWalletForm: React.FC = () => {
         }));
         setImagePreview(base64String);
         setError(null);
+
+        // Clear the input so selecting the same file again still triggers onChange
+        inputEl.value = "";
       };
       reader.onerror = () => {
         setError("Failed to read image file");
