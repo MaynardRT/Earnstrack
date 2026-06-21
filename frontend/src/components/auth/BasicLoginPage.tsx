@@ -68,7 +68,7 @@ export const BasicLoginPage: React.FC = () => {
         <div className="text-center mb-8">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="ml-auto p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             aria-label="Toggle theme"
           >
             {isDarkMode ? (
