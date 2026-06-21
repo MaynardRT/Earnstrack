@@ -76,10 +76,19 @@ export const ELoadingForm: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = e.target;
+    // Strip all whitespace live for phoneNumber (covers typing and pasting),
+    // since phone numbers shouldn't contain spaces anywhere, not just at the ends.
+    const processedValue =
+      name === "phoneNumber" ? value.replace(/\s/g, "") : value;
+
     setFormData((prev) => ({
       ...prev,
       [name]:
-        type === "number" ? (value === "" ? 0 : parseFloat(value)) : value,
+        type === "number"
+          ? value === ""
+            ? 0
+            : parseFloat(value)
+          : processedValue,
     }));
   };
 
