@@ -35,6 +35,8 @@ export const ELoadingForm: React.FC = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const inputEl = e.target; // keep a reference for use inside the async callback
+
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         setError("Image size must be less than 5MB");
@@ -50,6 +52,7 @@ export const ELoadingForm: React.FC = () => {
         setFormData((prev) => ({ ...prev, screenshotBase64: base64String }));
         setImagePreview(base64String);
         setError(null);
+        inputEl.value = ""; // allow re-selecting the same file later
       };
       reader.onerror = () => setError("Failed to read image file");
       reader.readAsDataURL(file);
