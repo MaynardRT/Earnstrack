@@ -107,12 +107,12 @@ eTracker/
    dotnet restore
    ```
 
-3. Update database connection string in `appsettings.json`:
+3. Configure the database connection using local configuration or environment variables. Never commit credentials or production connection strings. For example:
 
    ```json
    {
      "ConnectionStrings": {
-       "DefaultConnection": "Host=localhost;Port=5432;Database=etracker_dev;Username=postgres;Password=postgres"
+       "DefaultConnection": "Host=<host>;Port=<port>;Database=<database>;Username=<username>;Password=<password>"
      }
    }
    ```
@@ -164,7 +164,7 @@ The frontend will be available at `http://localhost:5173`
 Update `appsettings.json` with:
 
 - Database connection string
-- JWT secret key (change from default)
+- JWT secret supplied through secure environment configuration
 
 ### Environment Variables (Frontend)
 
