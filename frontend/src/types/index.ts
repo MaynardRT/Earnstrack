@@ -127,6 +127,10 @@ export interface UpdateProductDto {
   isActive?: boolean;
 }
 
+export interface SellProductDto {
+  quantity: number;
+}
+
 // Settings Types
 export interface ServiceFee {
   id: string;

@@ -10,9 +10,9 @@ import {
   getEWalletAmountBracket,
 } from "../../utils/transactionCalculations";
 
-const EWALLET_BRACKETS = Array.from({ length: 20 }, (_, index) => {
-  const min = index * 500 + 1;
-  const max = min + 499;
+const EWALLET_BRACKETS = Array.from({ length: 40 }, (_, index) => {
+  const min = index * 250 + 1;
+  const max = min + 249;
   const fee = (index + 1) * 5;
 
   return {

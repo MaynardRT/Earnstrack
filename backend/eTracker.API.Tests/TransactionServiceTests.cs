@@ -82,7 +82,7 @@ public class TransactionServiceTests
         context.Transactions.AddRange(
             CreateTransaction(userId, 100m, "Completed", startOfWeek.AddHours(9)),
             CreateTransaction(userId, 125m, "Completed", today.AddHours(12)),
-            CreateTransaction(userId, 200m, "Completed", startOfWeek.AddDays(-1).AddHours(18)));
+            CreateTransaction(userId, 200m, "Completed", startOfWeek.AddDays(-2).AddHours(12)));
         await context.SaveChangesAsync();
 
         var service = CreateService(context);
@@ -205,18 +205,18 @@ public class TransactionServiceTests
     }
 
     [Theory]
-    [InlineData(500, 5)]
-    [InlineData(501, 10)]
-    [InlineData(1000, 10)]
-    [InlineData(1001, 15)]
-    [InlineData(1500, 15)]
-    [InlineData(1501, 20)]
-    [InlineData(5000, 50)]
-    [InlineData(5001, 55)]
-    [InlineData(9500, 95)]
-    [InlineData(9501, 100)]
-    [InlineData(10000, 100)]
-    [InlineData(10001, 100)]
+    [InlineData(500, 10)]
+    [InlineData(501, 15)]
+    [InlineData(1000, 20)]
+    [InlineData(1001, 25)]
+    [InlineData(1500, 30)]
+    [InlineData(1501, 35)]
+    [InlineData(5000, 100)]
+    [InlineData(5001, 105)]
+    [InlineData(9500, 190)]
+    [InlineData(9501, 195)]
+    [InlineData(10000, 200)]
+    [InlineData(10001, 205)]
     public async Task CreateEWalletTransaction_UsesConfiguredTieredServiceCharge(decimal baseAmount, decimal expectedServiceCharge)
     {
         using var context = CreateContext();
@@ -360,6 +360,12 @@ public class TransactionServiceTests
             => Task.FromResult(_eWalletFee);
 
         public Task<ServiceFee?> GetServiceFeeForPrinting(string serviceType)
+            => Task.FromResult<ServiceFee?>(null);
+
+        public Task<ServiceFee?> GetServiceFeeForELoading(string mobileNetwork)
+            => Task.FromResult<ServiceFee?>(null);
+
+        public Task<ServiceFee?> GetServiceFeeForBillsPayment()
             => Task.FromResult<ServiceFee?>(null);
 
         public Task<List<ServiceFeeDto>> GetAllServiceFees()

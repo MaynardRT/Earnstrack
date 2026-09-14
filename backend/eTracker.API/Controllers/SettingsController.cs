@@ -245,13 +245,15 @@ public class SettingsController : ControllerBase
     }
 
     [HttpPost("products/{id}/sell")]
-    public async Task<ActionResult<ProductDto>> SellProduct(Guid id)
+    public async Task<ActionResult<ProductDto>> SellProduct(
+        Guid id,
+        [FromBody] SellProductDto? request)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userId, out var userGuid))
             return Unauthorized();
 
-        var product = await _productService.SellProduct(id, userGuid);
+        var product = await _productService.SellProduct(id, userGuid, request?.Quantity ?? 1);
         if (product == null)
             return BadRequest("Product not found, out of stock, or inactive.");
 

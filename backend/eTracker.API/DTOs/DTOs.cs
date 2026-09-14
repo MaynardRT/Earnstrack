@@ -168,6 +168,11 @@ public class UpdateProductDto
     public bool? IsActive { get; set; }
 }
 
+public class SellProductDto
+{
+    public int Quantity { get; set; } = 1;
+}
+
 // Service Fee DTOs
 public class ServiceFeeDto
 {

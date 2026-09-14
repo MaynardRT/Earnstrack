@@ -168,10 +168,14 @@ export const ELoadingForm: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Mobile Network */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="mobileNetwork"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Mobile Network
             </label>
             <select
+              id="mobileNetwork"
               name="mobileNetwork"
               value={formData.mobileNetwork}
               onChange={handleChange}

@@ -757,37 +757,11 @@ public class TransactionService : ITransactionService
     }
 
     /// <summary>
-    /// Returns the service charge for E-Wallet transactions based on the fixed fee matrix (₱1–₱20,000).
+    /// Returns the service charge for E-Wallet transactions based on ₱250 bands.
     /// </summary>
     private decimal CalculateEWalletServiceCharge(decimal baseAmount)
     {
         if (baseAmount <= 0) return 0m;
-        // Fee matrix as (min, max, fee)
-        var feeMatrix = new (decimal min, decimal max, decimal fee)[]
-        {
-            (1, 500, 5), (501, 1000, 10), (1001, 1500, 15), (1501, 2000, 20),
-            (2001, 2500, 25), (2501, 3000, 30), (3001, 3500, 35), (3501, 4000, 40),
-            (4001, 4500, 45), (4501, 5000, 50), (5001, 5500, 60), (5501, 6000, 70),
-            (6001, 6500, 80), (6501, 7000, 90), (7001, 7500, 100), (7501, 8000, 110),
-            (8001, 8500, 120), (8501, 9000, 130), (9001, 9500, 140), (9501, 10000, 150),
-            (10001, 10500, 160), (10501, 11000, 170), (11001, 11500, 180), (11501, 12000, 190),
-            (12001, 12500, 200), (12501, 13000, 210), (13001, 13500, 220), (13501, 14000, 230),
-            (14001, 14500, 240), (14501, 15000, 250), (15001, 15500, 260), (15501, 16000, 270),
-            (16001, 16500, 280), (16501, 17000, 290), (17001, 17500, 300), (17501, 18000, 310),
-            (18001, 18500, 320), (18501, 19000, 330), (19001, 19500, 340), (19501, 20000, 350)
-        };
-        foreach (var (min, max, fee) in feeMatrix)
-        {
-            if (baseAmount >= min && baseAmount <= max)
-                return fee;
-        }
-
-        if (baseAmount > 20000m)
-        {
-            var overflowBandIndex = (int)Math.Floor((double)((baseAmount - 1m) / 500m)) - 39;
-            return overflowBandIndex * 5m;
-        }
-
-        return 350m;
+        return Math.Ceiling(baseAmount / 250m) * 5m;
     }
 }

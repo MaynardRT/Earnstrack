@@ -5,6 +5,7 @@ import {
   Product,
   CreateProductDto,
   UpdateProductDto,
+  SellProductDto,
 } from "../types";
 
 export const settingsService = {
@@ -86,8 +87,8 @@ export const settingsService = {
     await api.delete(`/settings/products/${id}`);
   },
 
-  sellProduct: async (id: string): Promise<Product> => {
-    const response = await api.post(`/settings/products/${id}/sell`);
+  sellProduct: async (id: string, data: SellProductDto): Promise<Product> => {
+    const response = await api.post(`/settings/products/${id}/sell`, data);
     return response.data;
   },
 };

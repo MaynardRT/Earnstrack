@@ -8,18 +8,16 @@ import {
 } from "./transactionCalculations";
 
 describe("transactionCalculations", () => {
-  it("uses 500-step fee brackets based on the e-wallet rate card", () => {
-    expect(calculateEWalletServiceCharge(500)).toBe(5);
-    expect(calculateEWalletServiceCharge(501)).toBe(10);
-    expect(calculateEWalletServiceCharge(1000)).toBe(10);
-    expect(calculateEWalletServiceCharge(1001)).toBe(15);
-    expect(calculateEWalletServiceCharge(1500)).toBe(15);
-    expect(calculateEWalletServiceCharge(1501)).toBe(20);
-    expect(calculateEWalletServiceCharge(9500)).toBe(140);
-    expect(calculateEWalletServiceCharge(9501)).toBe(150);
-    expect(calculateEWalletServiceCharge(10000)).toBe(150);
-    expect(calculateEWalletServiceCharge(10001)).toBe(160);
-    expect(calculateEWalletTotal(10000)).toBe(10150);
+  it("uses 250-step fee brackets based on the e-wallet rate card", () => {
+    expect(calculateEWalletServiceCharge(250)).toBe(5);
+    expect(calculateEWalletServiceCharge(251)).toBe(10);
+    expect(calculateEWalletServiceCharge(1000)).toBe(20);
+    expect(calculateEWalletServiceCharge(1001)).toBe(25);
+    expect(calculateEWalletServiceCharge(9500)).toBe(190);
+    expect(calculateEWalletServiceCharge(9501)).toBe(195);
+    expect(calculateEWalletServiceCharge(10000)).toBe(200);
+    expect(calculateEWalletServiceCharge(10001)).toBe(205);
+    expect(calculateEWalletTotal(10001)).toBe(10206);
   });
 
   it("returns the current amount brackets used by the form", () => {
@@ -35,12 +33,12 @@ describe("transactionCalculations", () => {
   });
 
   it("uses the overflow fee bands for amounts above 20,000", () => {
-    expect(calculateEWalletServiceCharge(20001)).toBe(5);
-    expect(calculateEWalletServiceCharge(20501)).toBe(10);
-    expect(calculateEWalletServiceCharge(21001)).toBe(15);
-    expect(calculateEWalletTotal(20001)).toBe(20006);
-    expect(calculateEWalletTotal(20501)).toBe(20511);
-    expect(calculateEWalletTotal(21001)).toBe(21016);
+    expect(calculateEWalletServiceCharge(20001)).toBe(405);
+    expect(calculateEWalletServiceCharge(20501)).toBe(415);
+    expect(calculateEWalletServiceCharge(21001)).toBe(425);
+    expect(calculateEWalletTotal(20001)).toBe(20406);
+    expect(calculateEWalletTotal(20501)).toBe(20916);
+    expect(calculateEWalletTotal(21001)).toBe(21426);
   });
 
   it("keeps printing totals as unit price times quantity with a minimum quantity of one", () => {

@@ -11,7 +11,7 @@ public interface IProductService
     Task<ProductDto?> CreateProduct(CreateProductDto dto);
     Task<ProductDto?> UpdateProduct(Guid id, UpdateProductDto dto);
     Task<bool> DeleteProduct(Guid id);
-    Task<ProductDto?> SellProduct(Guid id, Guid userId);
+    Task<ProductDto?> SellProduct(Guid id, Guid userId, int quantity);
 }
 
 public class ProductService : IProductService
@@ -112,13 +112,13 @@ public class ProductService : IProductService
         return true;
     }
 
-    public async Task<ProductDto?> SellProduct(Guid id, Guid userId)
+    public async Task<ProductDto?> SellProduct(Guid id, Guid userId, int quantity)
     {
         var product = await _context.Products.FindAsync(id);
-        if (product == null || !product.IsActive || product.StockCount <= 0)
+        if (product == null || !product.IsActive || quantity <= 0 || product.StockCount < quantity)
             return null;
 
-        product.StockCount -= 1;
+        product.StockCount -= quantity;
         product.UpdatedAt = DateTime.UtcNow;
 
         var transaction = new Transaction
@@ -126,9 +126,9 @@ public class ProductService : IProductService
             Id = Guid.NewGuid(),
             UserId = userId,
             TransactionType = "Products",
-            Amount = product.Price,
+            Amount = product.Price * quantity,
             ServiceCharge = 0,
-            TotalAmount = product.Price,
+            TotalAmount = product.Price * quantity,
             Status = "Completed",
             ProductName = product.Name
         };

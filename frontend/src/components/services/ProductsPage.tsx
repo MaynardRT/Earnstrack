@@ -11,6 +11,7 @@ export const ProductsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [sellingId, setSellingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
 
   useEffect(() => {
     settingsService
@@ -21,14 +22,17 @@ export const ProductsPage: React.FC = () => {
   }, []);
 
   const handleSell = async (product: Product) => {
+    const quantity = quantities[product.id] ?? 1;
     setSellingId(product.id);
     setError(null);
     try {
-      const updated = await settingsService.sellProduct(product.id);
+      const updated = await settingsService.sellProduct(product.id, {
+        quantity,
+      });
       setProducts((prev) =>
         prev.map((p) => (p.id === updated.id ? updated : p)),
       );
-      setSuccessMessage(`Sold 1x ${product.name}`);
+      setSuccessMessage(`Sold ${quantity}x ${product.name}`);
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch {
       setError(`Failed to sell ${product.name}`);
@@ -79,6 +83,35 @@ export const ProductsPage: React.FC = () => {
                     </h2>
                     <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       ₱{product.price.toFixed(2)}
+                    </p>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Quantity
+                      <input
+                        type="number"
+                        min="1"
+                        max={product.stockCount}
+                        value={quantities[product.id] ?? 1}
+                        onChange={(e) =>
+                          setQuantities((prev) => ({
+                            ...prev,
+                            [product.id]: Math.max(
+                              1,
+                              Math.min(
+                                product.stockCount,
+                                parseInt(e.target.value, 10) || 1,
+                              ),
+                            ),
+                          }))
+                        }
+                        disabled={outOfStock || sellingId === product.id}
+                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      />
+                    </label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Total: ₱
+                      {(product.price * (quantities[product.id] ?? 1)).toFixed(
+                        2,
+                      )}
                     </p>
                     <p
                       className={`text-sm font-medium ${
