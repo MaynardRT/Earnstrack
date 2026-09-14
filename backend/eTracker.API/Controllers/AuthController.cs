@@ -43,7 +43,8 @@ public class AuthController : ControllerBase
                     u.Role,
                     u.PasswordHash,
                     u.IsActive,
-                    u.CreatedAt
+                    u.CreatedAt,
+                    u.ProfilePicture
                 })
                 .FirstOrDefaultAsync();
 
@@ -88,6 +89,7 @@ public class AuthController : ControllerBase
                     Email = user.Email,
                     FullName = user.FullName,
                     Role = user.Role,
+                    ProfilePicture = user.ProfilePicture,
                     CreatedAt = user.CreatedAt
                 }
             });
